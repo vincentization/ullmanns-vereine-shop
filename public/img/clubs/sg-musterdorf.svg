@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="SG Musterdorf 1921 (Demo-Wappen)">
+  <defs><clipPath id="shield"><path d="M30 22 L170 22 L170 96 Q170 160 100 190 Q30 160 30 96 Z"/></clipPath></defs>
+  <g clip-path="url(#shield)">
+    <rect x="0" y="0" width="200" height="200" fill="#c8102e"/>
+    <path d="M100 0 L200 0 L200 200 L100 200 Z" fill="#1d1d1f"/>
+    <rect x="0" y="22" width="200" height="40" fill="#ffffff"/>
+  </g>
+  <path d="M30 22 L170 22 L170 96 Q170 160 100 190 Q30 160 30 96 Z" fill="none" stroke="#1d1d1f" stroke-width="6" stroke-linejoin="round"/>
+  <text x="100" y="52" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="15" fill="#1d1d1f" letter-spacing="1">MUSTERDORF</text>
+  <text x="100" y="118" text-anchor="middle" font-family="Arial Black, Arial, Helvetica, sans-serif" font-weight="900" font-size="46" fill="#ffffff">SG</text>
+  <circle cx="100" cy="146" r="14" fill="#ffffff" stroke="#1d1d1f" stroke-width="2"/>
+  <path d="M100 136 L109 142 L106 152 L94 152 L91 142 Z" fill="#1d1d1f"/>
+  <text x="100" y="178" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="13" fill="#ffffff">1921</text>
+</svg>

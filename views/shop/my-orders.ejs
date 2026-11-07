@@ -1,0 +1,26 @@
+<%- include('partials/head', { title: title, active: 'orders' }) %>
+<div class="container narrow-wide">
+  <h1 class="page-title">Meine Bestellungen</h1>
+  <p class="muted">Hier siehst du die Bestellungen, die du in diesem Browser aufgegeben hast. Auf anderen Geräten nutzt du bitte den Link aus deiner Bestellbestätigung.</p>
+  <% if (!orders.length) { %>
+    <div class="empty-state"><p>Keine Bestellungen gefunden.</p><p><a class="btn btn-primary" href="<%= homeUrl %>#kollektion">Zur Kollektion</a></p></div>
+  <% } else { %>
+    <ul class="order-list">
+      <% orders.forEach(function (o) { %>
+        <li>
+          <a href="<%= o.url %>" class="order-list-item card">
+            <div>
+              <strong><%= o.order_number %></strong>
+              <span class="small muted"><%= h.date(o.created_at) %> · <%= o.itemCount %> Artikel · <%= h.money(o.member_total_cents) %></span>
+            </div>
+            <span class="row">
+              <% if (o.unread) { %><span class="badge badge-amber"><%= o.unread %> neue Nachricht<%= o.unread > 1 ? 'en' : '' %></span><% } %>
+              <span class="badge badge-<%= h.statusTone(o.status) %>"><%= h.statusLabel(o.status) %></span>
+            </span>
+          </a>
+        </li>
+      <% }) %>
+    </ul>
+  <% } %>
+</div>
+<%- include('partials/foot') %>

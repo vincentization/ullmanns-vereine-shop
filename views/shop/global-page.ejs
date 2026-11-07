@@ -1,0 +1,8 @@
+<%- include('partials/landing-head', { title: title }) %>
+<main class="container narrow landing-main" id="inhalt">
+  <article class="content-page">
+    <h1 class="page-title"><%= page.title %></h1>
+    <div class="prose"><%- h.markdown(page.content) %></div>
+  </article>
+</main>
+<%- include('partials/landing-foot') %>

@@ -1,0 +1,81 @@
+<%- include('../partials/head', { title, active }) %>
+<link rel="stylesheet" href="/static/css/admin-catalog.css">
+
+<nav class="tabs">
+  <a href="/admin/pages?club=global" class="<%= scope === 'global' ? 'active' : '' %>">🌐 Alle Shops (global) <span class="muted small">(<%= counts[0] || 0 %>)</span></a>
+  <% allClubs.forEach(function (c) { %>
+    <a href="/admin/pages?club=<%= c.id %>" class="<%= club && club.id === c.id ? 'active' : '' %>"><span class="dot" style="background: <%= c.color_primary %>"></span> <%= c.short_name || c.name %> <span class="muted small">(<%= counts[c.id] || 0 %>)</span></a>
+  <% }) %>
+</nav>
+
+<div class="page-header">
+  <p class="muted" style="margin:0">
+    <% if (club) { %>
+      Seiten im Shop von <strong><%= club.name %></strong> – z.B. Größentabelle, Abholung, FAQ.
+    <% } else { %>
+      Globale Seiten erscheinen in <strong>allen</strong> Vereinsshops (z.B. Impressum, Datenschutz, AGB). Ein Verein kann sie mit einer eigenen Seite gleicher Adresse überschreiben.
+    <% } %>
+  </p>
+  <div class="actions">
+    <a class="btn btn-primary" href="/admin/pages/new?club=<%= club ? club.id : 'global' %>">+ Neue Seite</a>
+  </div>
+</div>
+
+<% if (!pages.length) { %>
+  <div class="card empty">
+    <p><strong>Noch keine Seiten.</strong></p>
+    <a class="btn btn-primary" href="/admin/pages/new?club=<%= club ? club.id : 'global' %>">+ Neue Seite</a>
+  </div>
+<% } else { %>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Titel</th><th>Adresse</th><th>Anzeige</th><th>Status</th><th class="num">Sort.</th><th>Geändert</th><th></th></tr></thead>
+      <tbody>
+        <% pages.forEach(function (p) { const url = pageUrl(p); %>
+          <tr class="<%= p.is_published ? '' : 'is-muted' %>">
+            <td><a href="/admin/pages/<%= p.id %>/edit"><strong><%= p.title %></strong></a></td>
+            <td class="mono small">/seite/<%= p.slug %></td>
+            <td>
+              <% if (p.show_in_nav) { %><span class="pill">Navigation</span><% } %>
+              <% if (p.show_in_footer) { %><span class="pill">Footer</span><% } %>
+              <% if (!p.show_in_nav && !p.show_in_footer) { %><span class="small muted">nur per Link</span><% } %>
+            </td>
+            <td><% if (p.is_published) { %><span class="badge badge-green">Veröffentlicht</span><% } else { %><span class="badge badge-gray">Entwurf</span><% } %></td>
+            <td class="num"><%= p.sort_order %></td>
+            <td class="small muted"><%= h.date(p.updated_at) %></td>
+            <td class="row-actions">
+              <% if (url && p.is_published) { %><a class="btn btn-sm btn-ghost" href="<%= url %>" target="_blank" rel="noopener">Ansehen ↗</a><% } %>
+              <a class="btn btn-sm" href="/admin/pages/<%= p.id %>/edit">Bearbeiten</a>
+              <form class="inline" method="post" action="/admin/pages/<%= p.id %>/delete" data-confirm="Seite &quot;<%= p.title %>&quot; wirklich löschen?">
+                <button class="btn btn-sm btn-danger" type="submit">Löschen</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+<% } %>
+
+<% if (inherited.length) { %>
+  <h3 style="margin-top:24px">Zusätzlich sichtbar: globale Seiten</h3>
+  <p class="small muted">Diese Seiten gelten für alle Shops. Lege hier eine Seite mit gleicher Adresse an, um sie nur für diesen Verein anzupassen.</p>
+  <div class="table-wrap">
+    <table class="table">
+      <tbody>
+        <% inherited.forEach(function (p) { %>
+          <tr class="is-muted">
+            <td><%= p.title %></td>
+            <td class="mono small">/seite/<%= p.slug %></td>
+            <td class="row-actions">
+              <a class="btn btn-sm btn-ghost" href="/<%= club.slug %>/seite/<%= p.slug %>" target="_blank" rel="noopener">Ansehen ↗</a>
+              <a class="btn btn-sm" href="/admin/pages/<%= p.id %>/edit">Global bearbeiten</a>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+<% } %>
+
+<%- include('../partials/foot') %>

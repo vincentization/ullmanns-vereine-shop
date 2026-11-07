@@ -1,0 +1,9 @@
+<%# Detailzeile einer Position. Erwartet: variant, color, size, prints (Array [{label, value, price_cents}]) %>
+<ul class="line-details">
+  <% if (variant) { %><li><span>Ausführung</span> <%= variant %></li><% } %>
+  <% if (color) { %><li><span>Farbe</span> <%= color %></li><% } %>
+  <% if (size) { %><li><span>Größe</span> <%= size %></li><% } %>
+  <% (prints || []).forEach(function (pd) { %>
+    <li class="line-print"><span><%= pd.label %></span> „<%= pd.value %>“ <small>+ <%= h.money(pd.price_cents) %></small></li>
+  <% }) %>
+</ul>

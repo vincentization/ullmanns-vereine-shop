@@ -1,0 +1,33 @@
+<%# Produktkarte. Erwartet: card = { product, minPrice, memberFrom, hasRange, badge } %>
+<% const p = card.product; %>
+<article class="product-card">
+  <a class="product-card-link" href="<%= base %>/artikel/<%= p.id %>">
+    <div class="product-card-media">
+      <img src="<%= h.productImage(p) %>" alt="<%= p.name %>" loading="lazy" width="400" height="400">
+      <% if (card.badge) { %><span class="funding-badge"><%= card.badge %></span><% } %>
+      <% if (p.is_featured) { %><span class="featured-badge">Beliebt</span><% } %>
+    </div>
+    <div class="product-card-body">
+      <% if (p.brand) { %><span class="product-brand"><%= p.brand %></span><% } %>
+      <h3 class="product-name"><%= p.name %></h3>
+      <% if (p.colors.length) { %>
+        <span class="color-dots" aria-label="<%= p.colors.length %> Farben">
+          <% p.colors.slice(0, 6).forEach(function (c) { %><span class="color-dot" style="--c1: <%= c.hex %>; --c2: <%= c.hex2 || c.hex %>" title="<%= c.name %>"></span><% }) %>
+          <% if (p.colors.length > 6) { %><span class="color-more">+<%= p.colors.length - 6 %></span><% } %>
+        </span>
+      <% } %>
+      <div class="product-price">
+        <% if (card.memberFrom === 0) { %>
+          <span class="price-main price-free">Kostenlos<% if (p.print_options.length) { %> <small>zzgl. Druck</small><% } %></span>
+        <% } else { %>
+          <span class="price-main"><% if (card.hasRange) { %><small>ab</small> <% } %><%= h.money(card.memberFrom) %>*</span>
+        <% } %>
+        <% if (card.memberFrom !== card.minPrice) { %>
+          <span class="price-sub">statt <%= h.money(card.minPrice) %></span>
+        <% } else if (p.uvp_cents && p.uvp_cents > card.minPrice) { %>
+          <span class="price-sub">UVP <s><%= h.money(p.uvp_cents) %></s></span>
+        <% } %>
+      </div>
+    </div>
+  </a>
+</article>

@@ -1,0 +1,109 @@
+<%- include('../partials/head', { title, active }) %>
+<link rel="stylesheet" href="/static/css/admin-catalog.css">
+<% const isNew = !page.id; %>
+
+<div class="page-header">
+  <a class="small" href="/admin/pages?club=<%= scopeParam %>">← Seiten <%= club ? (club.short_name || club.name) : '(alle Shops)' %></a>
+  <div class="actions">
+    <% if (publicUrl && page.is_published) { %><a class="btn btn-sm" href="<%= publicUrl %>" target="_blank" rel="noopener">Seite ansehen ↗</a><% } %>
+  </div>
+</div>
+
+<% if (Object.keys(errors).length) { %><div class="alert alert-error"><strong>Bitte korrigiere die markierten Angaben.</strong></div><% } %>
+<% if (!club) { %><div class="alert alert-info">Globale Seite – erscheint in <strong>allen</strong> Vereinsshops.</div><% } %>
+<% if (club && globalOverride) { %><div class="alert alert-info">Diese Seite ersetzt im Shop von <%= club.name %> die globale Seite „<%= globalOverride.title %>“.</div><% } %>
+
+<form method="post" action="<%= isNew ? '/admin/pages/new' : '/admin/pages/' + page.id + '/edit' %>" id="page-form">
+  <input type="hidden" name="club" value="<%= scopeParam %>">
+  <div class="grid-main-side">
+    <section class="card">
+      <div class="card-body">
+        <div class="field-row">
+          <label class="field">
+            <span>Titel *</span>
+            <input name="title" value="<%= page.title %>" class="<%= errors.title ? 'is-invalid' : '' %>" required data-page-title <%= isNew ? 'autofocus' : '' %>>
+            <% if (errors.title) { %><span class="field-error"><%= errors.title %></span><% } %>
+          </label>
+          <label class="field">
+            <span>Adresse</span>
+            <span class="slug-field">
+              <span class="slug-prefix">/<%= club ? club.slug : '…' %>/seite/</span>
+              <input name="slug" value="<%= page.slug %>" class="mono <%= errors.slug ? 'is-invalid' : '' %>" data-page-slug <%= page.slug ? 'data-touched="1"' : '' %>>
+            </span>
+            <% if (errors.slug) { %><span class="field-error"><%= errors.slug %></span><% } %>
+          </label>
+        </div>
+
+        <div class="md-editor">
+          <div class="md-tabs" role="tablist">
+            <button type="button" class="active" data-md-tab="edit">Bearbeiten</button>
+            <button type="button" data-md-tab="preview">Vorschau</button>
+          </div>
+          <textarea name="content" data-md-input aria-label="Inhalt"><%= page.content %></textarea>
+          <div class="md-preview" data-md-preview hidden></div>
+        </div>
+        <p class="md-help" style="margin-top:8px">
+          Formatierung: <code>## Überschrift</code> · <code>**fett**</code> · <code>*kursiv*</code> · <code>- Aufzählung</code> · <code>1. Nummerierung</code> · <code>[Linktext](https://…)</code> · Tabellen: <code>| A | B |</code>
+        </p>
+      </div>
+    </section>
+
+    <aside class="stack">
+      <section class="card">
+        <div class="card-header"><h3>Veröffentlichung</h3></div>
+        <div class="card-body">
+          <label class="checkbox"><input type="checkbox" name="is_published" value="1" <%= Number(page.is_published) ? 'checked' : '' %>> <span><strong>Veröffentlicht</strong><br><span class="small muted">Sonst nur als Entwurf gespeichert.</span></span></label>
+          <label class="checkbox"><input type="checkbox" name="show_in_nav" value="1" <%= Number(page.show_in_nav) ? 'checked' : '' %>> <span>In der Navigation anzeigen</span></label>
+          <label class="checkbox"><input type="checkbox" name="show_in_footer" value="1" <%= Number(page.show_in_footer) ? 'checked' : '' %>> <span>Im Footer anzeigen</span></label>
+          <label class="field"><span>Sortierung</span><input type="number" name="sort_order" value="<%= page.sort_order %>"><span class="hint">Kleinere Zahl = weiter vorne.</span></label>
+        </div>
+        <div class="card-footer form-actions">
+          <button class="btn btn-primary" type="submit">Speichern</button>
+          <a class="btn btn-ghost" href="/admin/pages?club=<%= scopeParam %>">Abbrechen</a>
+        </div>
+      </section>
+      <% if (!isNew) { %>
+        <section class="card">
+          <div class="card-body">
+            <button class="btn btn-danger btn-sm" type="submit" form="delete-page">Seite löschen</button>
+          </div>
+        </section>
+      <% } %>
+    </aside>
+  </div>
+</form>
+<% if (!isNew) { %>
+  <form id="delete-page" method="post" action="/admin/pages/<%= page.id %>/delete" data-confirm="Seite wirklich löschen?"></form>
+<% } %>
+
+<script>
+(function () {
+  var title = document.querySelector('[data-page-title]');
+  var slug = document.querySelector('[data-page-slug]');
+  function slugify(t) {
+    return String(t || '').toLowerCase().replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+      .normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
+  }
+  slug.addEventListener('input', function () { slug.setAttribute('data-touched', '1'); });
+  title.addEventListener('input', function () { if (!slug.getAttribute('data-touched')) slug.value = slugify(title.value); });
+
+  var input = document.querySelector('[data-md-input]');
+  var preview = document.querySelector('[data-md-preview]');
+  document.querySelectorAll('[data-md-tab]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var showPreview = btn.getAttribute('data-md-tab') === 'preview';
+      document.querySelectorAll('[data-md-tab]').forEach(function (b) { b.classList.toggle('active', b === btn); });
+      input.hidden = showPreview;
+      preview.hidden = !showPreview;
+      if (showPreview) {
+        preview.innerHTML = '<p class="muted">Lädt …</p>';
+        fetch('/admin/pages/preview', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: input.value }), credentials: 'same-origin' })
+          .then(function (r) { return r.json(); })
+          .then(function (d) { preview.innerHTML = d.html || '<p class="muted">(leer)</p>'; })
+          .catch(function () { preview.innerHTML = '<p class="muted">Vorschau nicht verfügbar.</p>'; });
+      }
+    });
+  });
+})();
+</script>
+<%- include('../partials/foot') %>

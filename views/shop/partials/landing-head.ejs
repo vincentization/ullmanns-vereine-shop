@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> – <%= settings.store_name %></title>
+  <meta name="description" content="Vereinskollektionen bestellen beim <%= settings.store_name %>">
+  <link rel="stylesheet" href="/static/css/shop.css">
+  <link rel="icon" href="/static/img/store-logo.svg">
+</head>
+<body class="shop landing" style="--club-primary:#d7141a;--club-on-primary:#fff;--club-accent:#111;--club-on-accent:#fff">
+<header class="landing-header">
+  <div class="container landing-header-inner">
+    <a class="store-brand" href="/">
+      <img src="/static/img/store-logo.svg" alt="" width="56" height="56">
+      <span><strong><%= settings.store_name %></strong><small>Vereinsshops</small></span>
+    </a>
+    <span class="landing-contact"><% if (settings.store_phone) { %><a href="tel:<%= settings.store_phone.replace(/[^0-9+]/g, '') %>"><%= settings.store_phone %></a><% } %></span>
+  </div>
+  <div class="dot-stripe" aria-hidden="true"></div>
+</header>

@@ -1,0 +1,127 @@
+<% const club = order.club; const showClub = order.club_total_cents > 0; %><!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/static/css/admin-orders.css">
+</head>
+<body class="print-doc" style="--club: <%= club.color_primary %>">
+  <div class="print-toolbar no-print">
+    <a href="/admin/orders/<%= order.id %>">← Zurück zur Bestellung</a>
+    <button type="button" onclick="window.print()">🖨 Drucken</button>
+  </div>
+
+  <div class="sheet">
+    <header class="sheet-head">
+      <div class="sheet-store">
+        <img src="/static/img/store-logo.svg" alt="" width="56" height="56">
+        <div>
+          <strong><%= settings.store_name %></strong><br>
+          <%= settings.store_street %> · <%= settings.store_zip_city %><br>
+          Tel. <%= settings.store_phone %> · <%= settings.store_email %>
+        </div>
+      </div>
+      <div class="sheet-club">
+        <% if (club.logo_path) { %><img src="<%= club.logo_path %>" alt="" class="sheet-club-logo"><% } %>
+        <div><strong><%= club.name %></strong><br><span class="muted">Vereinskollektion</span></div>
+      </div>
+    </header>
+
+    <h1 class="sheet-title">Bestell- und Abholschein <span class="mono"><%= order.order_number %></span></h1>
+
+    <div class="sheet-meta">
+      <div>
+        <div class="label">Besteller</div>
+        <strong><%= order.first_name %> <%= order.last_name %></strong><br>
+        <%= order.email %><% if (order.phone) { %><br><%= order.phone %><% } %>
+      </div>
+      <div>
+        <div class="label">Verein / Mannschaft</div>
+        <%= club.short_name || club.name %><br>
+        <%= order.team || '–' %>
+        <% if (order.member_number) { %><br>Mitgliedsnr. <%= order.member_number %><% } %>
+      </div>
+      <div>
+        <div class="label">Bestellung</div>
+        Bestellt am <%= h.date(order.created_at) %><br>
+        Status: <strong><%= h.statusLabel(order.status) %></strong><br>
+        Gedruckt am <%= printedAt %>
+      </div>
+    </div>
+
+    <table class="sheet-table">
+      <thead>
+        <tr>
+          <th class="chk">✓</th>
+          <th>Artikel</th>
+          <th>Ausführung / Farbe / Größe</th>
+          <th>Sonderdruck</th>
+          <th class="num">Menge</th>
+          <th class="num">Einzel</th>
+          <th class="num">Mitglied</th>
+          <% if (showClub) { %><th class="num">Verein</th><% } %>
+        </tr>
+      </thead>
+      <tbody>
+      <% order.items.forEach(function (i) { %>
+        <tr>
+          <td class="chk"><span class="box"></span></td>
+          <td>
+            <strong><%= i.product_name %></strong>
+            <div class="small"><%= [i.brand, i.sku ? 'Art.-Nr. ' + i.sku : ''].filter(Boolean).join(' · ') %></div>
+          </td>
+          <td><%= [i.variant, i.color, i.size ? 'Gr. ' + i.size : ''].filter(Boolean).join(' / ') %></td>
+          <td>
+            <% if (i.print_details.length) { %>
+              <% i.print_details.forEach(function (p) { %><div><span class="small"><%= p.label %>:</span> <strong class="print-value"><%= p.value %></strong></div><% }) %>
+            <% } else { %>–<% } %>
+          </td>
+          <td class="num"><strong><%= i.quantity %></strong></td>
+          <td class="num"><%= h.money(i.unit_price_cents + i.print_price_cents) %></td>
+          <td class="num"><%= h.money(i.line_member_cents) %></td>
+          <% if (showClub) { %><td class="num"><%= i.line_club_cents ? h.money(i.line_club_cents) : '–' %></td><% } %>
+        </tr>
+      <% }) %>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="4">Summe</td>
+          <td class="num"><%= totals.qty %></td>
+          <td></td>
+          <td class="num"><%= h.money(order.member_total_cents) %></td>
+          <% if (showClub) { %><td class="num"><%= h.money(order.club_total_cents) %></td><% } %>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div class="sheet-totals">
+      <div class="sheet-pay">
+        <div class="label">Vom Mitglied im Geschäft zu zahlen</div>
+        <div class="amount"><%= h.money(order.member_total_cents) %></div>
+      </div>
+      <% if (order.club_total_cents) { %>
+      <div class="sheet-pay sheet-pay-club">
+        <div class="label">Vereinsanteil (Abrechnung mit dem Verein)</div>
+        <div class="amount"><%= h.money(order.club_total_cents) %></div>
+      </div>
+      <% } %>
+    </div>
+
+    <% if (order.customer_note) { %>
+      <div class="sheet-note"><span class="label">Anmerkung des Bestellers:</span> <%= order.customer_note %></div>
+    <% } %>
+
+    <div class="sheet-sign">
+      <div><span class="line"></span>Bezahlt am</div>
+      <div><span class="line"></span>Zahlart (bar / EC)</div>
+      <div><span class="line"></span>Ware erhalten – Unterschrift</div>
+    </div>
+
+    <footer class="sheet-foot small">
+      Zahlung bei Abholung im Geschäft. Alle Preise inkl. gesetzlicher MwSt. Individuell bedruckte Artikel sind vom Umtausch ausgeschlossen.
+    </footer>
+  </div>
+</body>
+</html>

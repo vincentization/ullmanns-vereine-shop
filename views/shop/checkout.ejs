@@ -1,0 +1,79 @@
+<%- include('partials/head', { title: title, active: 'cart' }) %>
+<div class="container narrow-wide">
+  <h1 class="page-title">Bestellung abschließen</h1>
+  <% if (formError) { %><div class="alert alert-error" role="alert"><%= formError %></div><% } %>
+  <div class="cart-layout">
+    <form class="checkout-form card" method="post" action="<%= base %>/kasse" novalidate>
+      <h2>Deine Angaben</h2>
+      <% function field(name, label, opts) { opts = opts || {}; %>
+        <label class="field<%= errors[name] ? ' has-error' : '' %>">
+          <span class="field-label"><%= label %><% if (opts.required) { %> <span class="req" aria-hidden="true">*</span><% } %></span>
+          <input type="<%= opts.type || 'text' %>" name="<%= name %>" value="<%= values[name] %>" <%= opts.required ? 'required' : '' %> autocomplete="<%= opts.ac || 'off' %>" <% if (opts.placeholder) { %>placeholder="<%= opts.placeholder %>"<% } %> <% if (errors[name]) { %>aria-invalid="true" aria-describedby="err-<%= name %>"<% } %>>
+          <% if (errors[name]) { %><span class="field-error" id="err-<%= name %>"><%= errors[name] %></span><% } else if (opts.hint) { %><span class="hint"><%= opts.hint %></span><% } %>
+        </label>
+      <% } %>
+      <div class="field-row">
+        <% field('first_name', 'Vorname', { required: true, ac: 'given-name' }) %>
+        <% field('last_name', 'Nachname', { required: true, ac: 'family-name' }) %>
+      </div>
+      <div class="field-row">
+        <% field('email', 'E-Mail', { required: true, type: 'email', ac: 'email', hint: 'Für Rückfragen zu deiner Bestellung.' }) %>
+        <% field('phone', 'Telefon', { type: 'tel', ac: 'tel', hint: 'Optional, für schnelle Rückfragen.' }) %>
+      </div>
+      <div class="field-row">
+        <% field('member_number', 'Mitgliedsnummer', { required: !!club.require_member_number, hint: club.require_member_number ? '' : 'Optional' }) %>
+        <% field('team', 'Mannschaft / Abteilung', { placeholder: 'z.B. D-Jugend, Damen, Gymnastik' }) %>
+      </div>
+      <label class="field">
+        <span class="field-label">Anmerkung</span>
+        <textarea name="customer_note" rows="3" placeholder="z.B. Abholung erst ab dem 15., Größe noch unsicher …"><%= values.customer_note %></textarea>
+      </label>
+
+      <div class="hp-field" aria-hidden="true">
+        <label>Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+      </div>
+
+      <div class="pay-note">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm1 4v8h16V9H4Zm0-2h16V7H4v0Zm2 6h6v2H6v-2Z"/></svg>
+        <div>
+          <strong>Zahlung bei Abholung im Geschäft</strong>
+          <p>Du bezahlst deine Bestellung erst bei Abholung im <%= settings.store_name %>, <%= settings.store_street %>, <%= settings.store_zip_city %>. Wir informieren dich, sobald alles bereitliegt.</p>
+        </div>
+      </div>
+      <% if (club.order_info) { %><div class="order-info prose"><%- h.markdown(club.order_info) %></div><% } %>
+
+      <label class="checkbox<%= errors.privacy ? ' has-error' : '' %>">
+        <input type="checkbox" name="privacy" value="1" <%= privacy ? 'checked' : '' %> required>
+        <span>Ich habe die <a href="<%= base %>/seite/datenschutz" target="_blank" rel="noopener">Datenschutzerklärung</a> gelesen und bin einverstanden, dass meine Angaben zur Bearbeitung der Bestellung gespeichert und an den Verein weitergegeben werden.</span>
+      </label>
+      <% if (errors.privacy) { %><p class="field-error"><%= errors.privacy %></p><% } %>
+
+      <button class="btn btn-primary btn-lg btn-block" type="submit">Verbindlich bestellen</button>
+      <p class="small muted center">Mit Klick auf „Verbindlich bestellen“ gibst du eine verbindliche Bestellung beim <%= settings.store_name %> ab. Bedruckte Artikel sind vom Umtausch ausgeschlossen.</p>
+    </form>
+
+    <aside class="cart-summary card">
+      <h2>Deine Bestellung</h2>
+      <ul class="mini-lines">
+        <% summary.lines.forEach(function (line) { var p = line.product; var color = p.colors.find(function (c) { return c.name === line.color; }); %>
+          <li>
+            <img src="<%= h.productImage(p, color) %>" alt="" width="56" height="56">
+            <div>
+              <strong><%= line.quantity %> × <%= p.name %></strong>
+              <span class="small muted"><%= [line.variant, line.color, line.size].filter(Boolean).join(' · ') %></span>
+              <% line.unit.printDetails.forEach(function (pd) { %><span class="small">Druck: <%= pd.label %> „<%= pd.value %>“</span><% }) %>
+            </div>
+            <span class="mini-price"><%= h.money(line.lineMemberCents) %></span>
+          </li>
+        <% }) %>
+      </ul>
+      <% if (summary.clubTotal) { %>
+        <div class="sum-row"><span>Gesamtwert</span><span><%= h.money(summary.total) %></span></div>
+        <div class="sum-row club-share"><span>davon zahlt der Verein</span><span>− <%= h.money(summary.clubTotal) %></span></div>
+      <% } %>
+      <div class="sum-row sum-total"><span>Du zahlst im Geschäft</span><strong><%= h.money(summary.memberTotal) %>*</strong></div>
+      <a class="btn btn-link btn-block" href="<%= base %>/warenkorb">Warenkorb bearbeiten</a>
+    </aside>
+  </div>
+</div>
+<%- include('partials/foot') %>

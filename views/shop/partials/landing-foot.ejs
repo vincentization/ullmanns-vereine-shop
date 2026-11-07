@@ -1,0 +1,28 @@
+</main>
+<footer class="site-footer">
+  <div class="container footer-grid footer-grid-3">
+    <div class="footer-col">
+      <h2>Anschrift &amp; Kontakt</h2>
+      <p><%= settings.store_name %><br><%= settings.store_street %><br><%= settings.store_zip_city %></p>
+      <p><% if (settings.store_phone) { %>Tel. <%= settings.store_phone %><br><% } %><% if (settings.store_email) { %><a href="mailto:<%= settings.store_email %>"><%= settings.store_email %></a><% } %></p>
+    </div>
+    <div class="footer-col">
+      <h2>Öffnungszeiten</h2>
+      <p class="pre-line"><%= settings.store_opening_hours %></p>
+    </div>
+    <div class="footer-col">
+      <h2><%= settings.store_name %></h2>
+      <ul class="footer-links">
+        <li><a href="/">Alle Vereinsshops</a></li>
+        <% footerPages.forEach(function (p) { %><li><a href="/seite/<%= p.slug %>"><%= p.title %></a></li><% }) %>
+        <% if (settings.store_website) { %><li><a href="<%= settings.store_website %>" rel="noopener">Website <%= settings.store_name %></a></li><% } %>
+      </ul>
+    </div>
+  </div>
+  <div class="container footer-bottom">
+    <p class="price-footnote"><%= settings.price_footnote %></p>
+    <p>© <%= new Date().getFullYear() %> <%= settings.store_name %></p>
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,56 @@
+</main>
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div class="footer-col footer-store">
+      <div class="footer-store-brand">
+        <img src="/static/img/store-logo.svg" alt="" width="48" height="48">
+        <div>
+          <strong><%= settings.store_name %></strong>
+          <% if (settings.store_tagline) { %><span><%= settings.store_tagline %></span><% } %>
+        </div>
+      </div>
+      <p class="footer-note">Dieser Shop wird vom <%= settings.store_name %> für den <%= club.name %> betrieben. Das Sporthaus nimmt deine Bestellung an und koordiniert Druck und Beflockung.</p>
+    </div>
+    <div class="footer-col">
+      <h2>Anschrift &amp; Kontakt</h2>
+      <p>
+        <%= settings.store_name %><br>
+        <%= settings.store_street %><br>
+        <%= settings.store_zip_city %>
+      </p>
+      <p>
+        <% if (settings.store_phone) { %>Tel. <a href="tel:<%= settings.store_phone.replace(/[^0-9+]/g, '') %>"><%= settings.store_phone %></a><br><% } %>
+        <% if (settings.store_email) { %><a href="mailto:<%= settings.store_email %>"><%= settings.store_email %></a><% } %>
+      </p>
+      <% if (club.contact_name || club.contact_email) { %>
+        <p class="footer-contact">Ansprechpartner für den Verein:<br>
+          <% if (club.contact_name) { %><%= club.contact_name %><br><% } %>
+          <% if (club.contact_email) { %><a href="mailto:<%= club.contact_email %>"><%= club.contact_email %></a><br><% } %>
+          <% if (club.contact_phone) { %><a href="tel:<%= club.contact_phone.replace(/[^0-9+]/g, '') %>"><%= club.contact_phone %></a><% } %>
+        </p>
+      <% } %>
+    </div>
+    <div class="footer-col">
+      <h2>Öffnungszeiten</h2>
+      <p class="pre-line"><%= settings.store_opening_hours %></p>
+      <p class="footer-pay">Bezahlung bei Abholung im Geschäft – bar oder mit Karte.</p>
+    </div>
+    <div class="footer-col">
+      <h2>Infos</h2>
+      <ul class="footer-links">
+        <li><a href="<%= homeUrl %>">Zur Kollektion</a></li>
+        <% footerPages.forEach(function (p) { %>
+          <li><a href="<%= base %>/seite/<%= p.slug %>"><%= p.title %></a></li>
+        <% }) %>
+        <% if (myOrdersCount) { %><li><a href="<%= base %>/meine-bestellungen">Meine Bestellungen</a></li><% } %>
+      </ul>
+    </div>
+  </div>
+  <div class="container footer-bottom">
+    <p class="price-footnote"><%= settings.price_footnote %></p>
+    <p>© <%= new Date().getFullYear() %> <%= settings.store_name %> · Vereinsshop <%= club.short_name || club.name %></p>
+  </div>
+</footer>
+<script src="/static/js/shop.js" defer></script>
+</body>
+</html>

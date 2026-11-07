@@ -1,0 +1,174 @@
+<%- include('../partials/head', { title, active }) %>
+<link rel="stylesheet" href="/static/css/admin-catalog.css">
+
+<div class="page-header">
+  <form method="get" action="/admin/products" class="row club-switch">
+    <label class="field">
+      <span>Verein</span>
+      <select name="club" data-autosubmit>
+        <% allClubs.forEach(function (c) { %>
+          <option value="<%= c.id %>" <%= c.id === club.id ? 'selected' : '' %>><%= c.name %></option>
+        <% }) %>
+      </select>
+    </label>
+  </form>
+  <div class="actions">
+    <a class="btn" href="/<%= club.slug %>" target="_blank" rel="noopener">Shop ansehen ↗</a>
+    <a class="btn btn-primary" href="/admin/products/new?club=<%= club.id %>">+ Neuer Artikel</a>
+  </div>
+</div>
+
+<div class="catalog-summary">
+  <span class="club-chip" style="--c: <%= club.color_primary %>; --t: <%= h.contrastText(club.color_primary) %>"><%= club.short_name || club.name %></span>
+  <span class="muted"><strong><%= counts.active %></strong> von <%= counts.total %> Artikeln im Shop sichtbar</span>
+</div>
+
+<form method="get" action="/admin/products" class="filters">
+  <input type="hidden" name="club" value="<%= club.id %>">
+  <label class="field">
+    <span>Suche</span>
+    <input type="search" name="q" value="<%= filters.q %>" placeholder="Name, Marke, Artikelnr.">
+  </label>
+  <label class="field">
+    <span>Kategorie</span>
+    <select name="cat" data-autosubmit>
+      <option value="">Alle Kategorien</option>
+      <% categories.forEach(function (c) { %><option <%= filters.cat === c ? 'selected' : '' %>><%= c %></option><% }) %>
+    </select>
+  </label>
+  <label class="field">
+    <span>Status</span>
+    <select name="status" data-autosubmit>
+      <option value="">Alle</option>
+      <option value="active" <%= filters.status === 'active' ? 'selected' : '' %>>Sichtbar</option>
+      <option value="inactive" <%= filters.status === 'inactive' ? 'selected' : '' %>>Ausgeblendet</option>
+    </select>
+  </label>
+  <button class="btn" type="submit">Filtern</button>
+  <% if (filters.q || filters.cat || filters.status) { %><a class="btn btn-ghost" href="/admin/products?club=<%= club.id %>">Zurücksetzen</a><% } %>
+</form>
+
+<% if (!products.length) { %>
+  <div class="card empty">
+    <% if (counts.total) { %>
+      Keine Artikel passen zu diesem Filter.
+    <% } else { %>
+      <p><strong>Noch keine Artikel im Sortiment.</strong></p>
+      <p>Lege den ersten Artikel an oder kopiere Artikel aus einem anderen Verein.</p>
+      <a class="btn btn-primary" href="/admin/products/new?club=<%= club.id %>">+ Neuer Artikel</a>
+    <% } %>
+  </div>
+<% } else { %>
+<form method="post" action="/admin/products/bulk" id="bulk-form">
+  <input type="hidden" name="club_id" value="<%= club.id %>">
+  <%# Standard-Button für Enter in den Sortierfeldern %>
+  <button type="submit" name="sort_submit" value="1" class="visually-hidden" tabindex="-1" aria-hidden="true">Sortierung speichern</button>
+
+  <div class="bulk-bar card">
+    <label class="checkbox"><input type="checkbox" data-select-all> <span>Alle auswählen</span></label>
+    <span class="muted small" data-selected-count>0 ausgewählt</span>
+    <span class="spacer"></span>
+    <select name="action" id="bulk-action" aria-label="Sammelaktion">
+      <option value="">Aktion für Auswahl …</option>
+      <option value="activate">Im Shop anzeigen</option>
+      <option value="deactivate">Ausblenden</option>
+      <option value="price_pct">Preise um % ändern</option>
+      <option value="price_abs">Preise um € ändern</option>
+      <% if (otherClubs.length) { %><option value="copy">In anderen Verein kopieren</option><% } %>
+      <option value="delete">Löschen</option>
+    </select>
+    <input type="text" name="value" id="bulk-value" placeholder="z.B. 5 oder -2,50" class="bulk-value" hidden>
+    <% if (otherClubs.length) { %>
+      <select name="target_club" id="bulk-target" hidden aria-label="Ziel-Verein">
+        <% otherClubs.forEach(function (c) { %><option value="<%= c.id %>"><%= c.name %></option><% }) %>
+      </select>
+    <% } %>
+    <button class="btn btn-secondary btn-sm" type="submit" name="bulk" value="1" data-bulk-submit>Ausführen</button>
+  </div>
+
+  <div class="table-wrap">
+    <table class="table product-table">
+      <thead>
+        <tr>
+          <th style="width:32px"></th>
+          <th>Artikel</th>
+          <th class="num">Preis</th>
+          <th>Wer zahlt</th>
+          <th>Varianten</th>
+          <th title="Im Shop sichtbar">Sichtbar</th>
+          <th class="num" title="Sortierung (kleinere Zahl = weiter vorne)">Sort.</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+      <% products.forEach(function (p) { %>
+        <tr class="<%= p.is_active ? '' : 'is-muted' %>">
+          <td><input type="checkbox" name="ids[]" value="<%= p.id %>" aria-label="Auswählen"></td>
+          <td>
+            <div class="product-cell">
+              <img class="thumb" src="<%= h.productImage(p) %>" alt="" loading="lazy">
+              <div>
+                <a href="/admin/products/<%= p.id %>/edit"><strong><%= p.name %></strong></a>
+                <div class="small muted"><%= [p.category, p.brand, p.sku ? 'Art.-Nr. ' + p.sku : null].filter(Boolean).join(' · ') %>
+                  <% if (p.is_featured) { %> · <span class="badge badge-amber">★ Hervorgehoben</span><% } %>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="num">
+            <strong><%= h.money(p.price_cents) %></strong>
+            <% if (p.uvp_cents) { %><div class="small muted"><s>UVP <%= h.money(p.uvp_cents) %></s></div><% } %>
+          </td>
+          <td>
+            <% if (p.funding_mode === 'subsidy') { %>
+              <span class="badge badge-violet">Zuschuss <%= h.money(p.subsidy_cents) %></span>
+            <% } else if (p.funding_mode === 'club_article') { %>
+              <span class="badge badge-green">Verein zahlt Artikel</span>
+            <% } else { %>
+              <span class="badge badge-gray">Mitglied zahlt</span>
+            <% } %>
+          </td>
+          <td class="col-colors">
+            <div class="swatches">
+              <% p.colors.forEach(function (c) { %><span class="swatch" title="<%= c.name %>" style="background: linear-gradient(135deg, <%= c.hex %> 60%, <%= c.hex2 || c.hex %> 60%)"></span><% }) %>
+            </div>
+            <% if (p.variants.length) { %><div class="small muted"><%= p.variants.map(function (v) { return v.name; }).join(' · ') %></div><% } %>
+            <% if (p.print_options.length) { %><div class="small muted">Druck: <%= p.print_options.map(function (o) { return o.label; }).join(', ') %></div><% } %>
+          </td>
+          <td>
+            <button class="toggle compact <%= p.is_active ? 'on' : '' %>" type="submit" formaction="/admin/products/<%= p.id %>/toggle" title="<%= p.is_active ? 'Im Shop sichtbar – klicken zum Ausblenden' : 'Ausgeblendet – klicken zum Anzeigen' %>">
+              <span class="toggle-knob"></span><span class="toggle-label"><%= p.is_active ? 'Sichtbar' : 'Ausgeblendet' %></span>
+            </button>
+          </td>
+          <td class="num"><input class="sort-input" type="number" name="sort[<%= p.id %>]" value="<%= p.sort_order %>" aria-label="Sortierung"></td>
+          <td class="row-actions">
+            <a class="btn btn-sm" href="/admin/products/<%= p.id %>/edit">Bearbeiten</a>
+            <details class="menu">
+              <summary class="btn btn-sm btn-ghost" aria-label="Weitere Aktionen">⋯</summary>
+              <div class="menu-panel">
+                <button type="submit" formaction="/admin/products/<%= p.id %>/duplicate">Duplizieren</button>
+                <% if (otherClubs.length) { %>
+                  <div class="menu-sep">Kopieren nach …</div>
+                  <% otherClubs.forEach(function (c) { %>
+                    <button type="submit" formaction="/admin/products/<%= p.id %>/copy?to=<%= c.id %>"><span class="dot" style="background: <%= c.color_primary %>"></span><%= c.short_name || c.name %></button>
+                  <% }) %>
+                <% } %>
+                <div class="menu-sep"></div>
+                <button type="submit" class="danger" formaction="/admin/products/<%= p.id %>/delete" data-confirm="Artikel &quot;<%= p.name %>&quot; wirklich löschen? Bestehende Bestellungen bleiben erhalten.">Löschen</button>
+              </div>
+            </details>
+          </td>
+        </tr>
+      <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-sm" type="submit" name="sort_submit" value="1">Sortierung speichern</button>
+    <span class="small muted">Kleinere Zahl = weiter vorne im Shop.</span>
+  </div>
+</form>
+<% } %>
+
+<script src="/static/js/admin-products.js"></script>
+<%- include('../partials/foot') %>

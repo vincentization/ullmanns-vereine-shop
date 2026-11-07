@@ -1,0 +1,70 @@
+<%#
+  Shop-Layout (Kopf) für Vereinsshops. Aufruf: include('partials/head', { title, active })
+  active: home | cart | orders | page:<slug>
+%>
+<% const act = typeof active !== 'undefined' ? active : ''; %>
+<!doctype html>
+<html lang="de" style="<%= clubStyle %>">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> – <%= club.short_name || club.name %> Vereinskollektion</title>
+  <meta name="description" content="Vereinskollektion <%= club.name %> – bestellen beim <%= settings.store_name %>">
+  <meta name="theme-color" content="<%= club.color_primary %>">
+  <% if (isPreview) { %><meta name="robots" content="noindex"><% } %>
+  <link rel="stylesheet" href="/static/css/shop.css">
+  <% if (club.logo_path) { %><link rel="icon" href="<%= club.logo_path %>"><% } %>
+</head>
+<body class="shop">
+<a class="skip-link" href="#inhalt">Zum Inhalt springen</a>
+<% if (isPreview) { %>
+  <div class="preview-banner">Vorschau: Dieser Shop ist noch nicht freigeschaltet und nur für angemeldete Backend-Benutzer sichtbar.</div>
+<% } %>
+<div class="topbar">
+  <div class="container topbar-inner">
+    <span class="topbar-service">Ein Service von <strong><%= settings.store_name %></strong></span>
+    <span class="topbar-meta">
+      <% if (settings.store_phone) { %><a href="tel:<%= settings.store_phone.replace(/[^0-9+]/g, '') %>"><%= settings.store_phone %></a><% } %>
+      <% if (settings.store_opening_hours) { %><span class="topbar-hours"><%= settings.store_opening_hours.split('\n').join(' · ') %></span><% } %>
+    </span>
+  </div>
+</div>
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="club-brand" href="<%= homeUrl %>">
+      <% if (club.logo_path) { %>
+        <img class="club-logo" src="<%= club.logo_path %>" alt="Logo <%= club.name %>" width="64" height="64">
+      <% } else { %>
+        <span class="club-logo club-logo-fallback" aria-hidden="true"><%= (club.short_name || club.name).split(/\s+/).map(function (w) { return w[0]; }).join('').slice(0, 3) %></span>
+      <% } %>
+      <span class="club-brand-text">
+        <span class="club-brand-kicker">Vereinskollektion</span>
+        <span class="club-brand-name"><%= club.name %></span>
+      </span>
+    </a>
+    <a class="cart-button <%= act === 'cart' ? 'active' : '' %>" href="<%= base %>/warenkorb" aria-label="Warenkorb, <%= cartCount %> Artikel">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M7 18a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm10 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4ZM5.2 4l.4 2H21l-2.2 8.4a2 2 0 0 1-1.9 1.6H8.1a2 2 0 0 1-2-1.6L3.6 2H1V0h4.2l.4 2"/></svg>
+      <span class="cart-label">Warenkorb</span>
+      <span class="cart-count" data-cart-count><%= cartCount %></span>
+    </a>
+  </div>
+  <nav class="main-nav" aria-label="Hauptnavigation">
+    <div class="container main-nav-inner">
+      <a href="<%= homeUrl %>" class="<%= act === 'home' ? 'active' : '' %>">Kollektion</a>
+      <% navPages.forEach(function (p) { %>
+        <a href="<%= base %>/seite/<%= p.slug %>" class="<%= act === 'page:' + p.slug ? 'active' : '' %>"><%= p.title %></a>
+      <% }) %>
+      <% if (myOrdersCount) { %>
+        <a href="<%= base %>/meine-bestellungen" class="<%= act === 'orders' ? 'active' : '' %>">Meine Bestellungen</a>
+      <% } %>
+    </div>
+  </nav>
+</header>
+<main id="inhalt" class="site-main">
+  <% const flashes = getFlashes(); if (flashes.length) { %>
+    <div class="container flash-wrap">
+      <% flashes.forEach(function (f) { %>
+        <div class="alert alert-<%= f.type === 'error' ? 'error' : f.type === 'info' ? 'info' : 'success' %>" role="status"><%= f.message %></div>
+      <% }) %>
+    </div>
+  <% } %>

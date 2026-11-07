@@ -1,0 +1,332 @@
+<%- include('../partials/head', { title, active }) %>
+<link rel="stylesheet" href="/static/css/admin-catalog.css">
+<%
+  const isNew = !form.id;
+  const firstColor = form.colors[0] || { hex: club.color_primary || '#1d3c9c', hex2: '#ffffff' };
+  const previewSrc = form.image_path || h.productImage({ illustration: form.illustration, colors: [firstColor] });
+  const colorRows = form.colors.concat([{ name: '', hex: club.color_primary || '#1d3c9c', hex2: '#ffffff', _blank: true }]);
+  const variantRows = form.variants.concat([{ name: '', price: '', _blank: true }]);
+  const printRows = form.print_options.concat([{ label: '', key: '', max_length: '', price: '', placeholder: '', required: false, _blank: true }]);
+%>
+
+<div class="page-header">
+  <div>
+    <a href="/admin/products?club=<%= club.id %>" class="small">← Sortiment <%= club.short_name || club.name %></a>
+  </div>
+  <div class="actions">
+    <% if (!isNew) { %>
+      <a class="btn btn-sm" href="/<%= club.slug %>/artikel/<%= form.id %>" target="_blank" rel="noopener">Im Shop ansehen ↗</a>
+      <form class="inline" method="post" action="/admin/products/<%= form.id %>/duplicate"><button class="btn btn-sm" type="submit">Duplizieren</button></form>
+    <% } %>
+  </div>
+</div>
+
+<% if (Object.keys(errors).length) { %>
+  <div class="alert alert-error">
+    <strong>Bitte korrigiere die markierten Angaben:</strong>
+    <ul class="error-list"><% Object.values(errors).forEach(function (e) { %><li><%= e %></li><% }) %></ul>
+  </div>
+<% } %>
+
+<form method="post" enctype="multipart/form-data" action="<%= isNew ? '/admin/products/new?club=' + club.id : '/admin/products/' + form.id + '/edit' %>" id="product-form" novalidate>
+  <input type="hidden" name="club_id" value="<%= club.id %>">
+
+  <div class="grid-main-side">
+    <div class="stack">
+
+      <!-- Stammdaten -->
+      <section class="card">
+        <div class="card-header"><h2>Stammdaten</h2></div>
+        <div class="card-body">
+          <div class="field-row">
+            <label class="field">
+              <span>Marke</span>
+              <input name="brand" value="<%= form.brand %>" placeholder="z.B. Erima, Craft, Jako" list="brand-list">
+              <datalist id="brand-list"><option>Erima</option><option>Craft</option><option>Jako</option><option>Puma</option><option>adidas</option><option>Nike</option><option>uhlsport</option><option>Hummel</option></datalist>
+            </label>
+            <label class="field">
+              <span>Artikelnummer</span>
+              <input name="sku" value="<%= form.sku %>" placeholder="z.B. 1032320">
+            </label>
+          </div>
+          <label class="field">
+            <span>Artikelname *</span>
+            <input name="name" value="<%= form.name %>" required class="<%= errors.name ? 'is-invalid' : '' %>" placeholder="z.B. Liga Star Trainingsjacke">
+            <% if (errors.name) { %><span class="field-error"><%= errors.name %></span><% } %>
+          </label>
+          <div class="field-row">
+            <label class="field">
+              <span>Kategorie</span>
+              <input name="category" value="<%= form.category %>" list="category-list" placeholder="z.B. Jacken">
+              <datalist id="category-list">
+                <% categories.forEach(function (c) { %><option><%= c %></option><% }) %>
+              </datalist>
+              <span class="hint">Nach Kategorien kann im Shop gefiltert werden.</span>
+            </label>
+            <label class="field">
+              <span>Grafik-Typ (ohne Foto)</span>
+              <select name="illustration" data-preview-type>
+                <% illustrations.forEach(function (i) { %><option value="<%= i.key %>" <%= form.illustration === i.key ? 'selected' : '' %>><%= i.label %></option><% }) %>
+              </select>
+              <span class="hint">Wird in der gewählten Artikelfarbe angezeigt, solange kein Foto hochgeladen ist.</span>
+            </label>
+          </div>
+          <label class="field">
+            <span>Beschreibung</span>
+            <textarea name="description" rows="5" placeholder="Material, Schnitt, Pflegehinweise … (Markdown möglich: **fett**, - Liste)"><%= form.description %></textarea>
+          </label>
+          <label class="field">
+            <span>Inklusive Vereinsdruck</span>
+            <input name="logo_print" value="<%= form.logo_print %>" placeholder="z.B. Vereinslogo Brust links, Vereinsname Rücken">
+            <span class="hint">Wird im Shop als „inklusive“ angezeigt (ohne Aufpreis für das Mitglied).</span>
+          </label>
+        </div>
+      </section>
+
+      <!-- Preise -->
+      <section class="card">
+        <div class="card-header"><h2>Preise &amp; Konditionen</h2></div>
+        <div class="card-body">
+          <div class="field-row">
+            <label class="field">
+              <span>Vereinspreis (€) *</span>
+              <input name="price" value="<%= form.price %>" inputmode="decimal" placeholder="26,99" class="<%= errors.price ? 'is-invalid' : '' %>" data-calc-price>
+              <% if (errors.price) { %><span class="field-error"><%= errors.price %></span><% } %>
+            </label>
+            <label class="field">
+              <span>UVP (€)</span>
+              <input name="uvp" value="<%= form.uvp %>" inputmode="decimal" placeholder="44,99" class="<%= errors.uvp ? 'is-invalid' : '' %>">
+              <span class="hint">Wird im Shop durchgestrichen angezeigt.</span>
+              <% if (errors.uvp) { %><span class="field-error"><%= errors.uvp %></span><% } %>
+            </label>
+          </div>
+
+          <div class="field"><span>Wer zahlt?</span></div>
+          <div class="funding-options">
+            <label class="funding-option">
+              <input type="radio" name="funding_mode" value="member" <%= form.funding_mode === 'member' ? 'checked' : '' %> data-calc-mode>
+              <span><strong>Mitglied zahlt alles</strong><small>Verein gibt nichts dazu. Mitglied zahlt Artikel und Sonderdrucke im Geschäft.</small></span>
+            </label>
+            <label class="funding-option">
+              <input type="radio" name="funding_mode" value="subsidy" <%= form.funding_mode === 'subsidy' ? 'checked' : '' %> data-calc-mode>
+              <span><strong>Verein gibt Zuschuss</strong><small>Verein übernimmt einen festen Betrag je Stück, Mitglied zahlt den Rest und die Sonderdrucke.</small>
+                <span class="subsidy-input">
+                  <input name="subsidy" value="<%= form.subsidy %>" inputmode="decimal" placeholder="10,00" class="<%= errors.subsidy ? 'is-invalid' : '' %>" data-calc-subsidy aria-label="Zuschuss je Stück in Euro"> € je Stück
+                </span>
+                <% if (errors.subsidy) { %><span class="field-error"><%= errors.subsidy %></span><% } %>
+              </span>
+            </label>
+            <label class="funding-option">
+              <input type="radio" name="funding_mode" value="club_article" <%= form.funding_mode === 'club_article' ? 'checked' : '' %> data-calc-mode>
+              <span><strong>Verein zahlt Artikel</strong><small>Artikel wird dem Verein berechnet. Mitglied zahlt nur gewünschte Sonderdrucke (z.B. Name).</small></span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- Farben -->
+      <section class="card">
+        <div class="card-header">
+          <h2>Farben</h2>
+          <span class="small muted">Erste Farbe = Standard im Shop</span>
+        </div>
+        <div class="card-body">
+          <% if (errors.colors) { %><div class="field-error block"><%= errors.colors %></div><% } %>
+          <div class="repeater" data-repeater="colors">
+            <div class="repeater-head color-grid"><span>Farbname</span><span>Hauptfarbe</span><span>Akzent</span><span></span></div>
+            <div data-rows>
+              <% colorRows.forEach(function (c, i) { %>
+                <div class="repeater-row color-grid" data-row>
+                  <input name="colors[<%= i %>][name]" value="<%= c.name %>" placeholder="<%= c._blank ? 'Neue Farbe, z.B. Royal/Weiß' : '' %>" aria-label="Farbname">
+                  <input type="color" name="colors[<%= i %>][hex]" value="<%= c.hex %>" aria-label="Hauptfarbe" data-color-main>
+                  <input type="color" name="colors[<%= i %>][hex2]" value="<%= c.hex2 %>" aria-label="Akzentfarbe">
+                  <button type="button" class="btn btn-sm btn-ghost" data-remove-row title="Entfernen" aria-label="Farbe entfernen">✕</button>
+                </div>
+              <% }) %>
+            </div>
+            <template>
+              <div class="repeater-row color-grid" data-row>
+                <input name="colors[__i__][name]" value="" placeholder="Farbname" aria-label="Farbname">
+                <input type="color" name="colors[__i__][hex]" value="<%= club.color_primary %>" aria-label="Hauptfarbe" data-color-main>
+                <input type="color" name="colors[__i__][hex2]" value="#ffffff" aria-label="Akzentfarbe">
+                <button type="button" class="btn btn-sm btn-ghost" data-remove-row title="Entfernen" aria-label="Farbe entfernen">✕</button>
+              </div>
+            </template>
+            <div class="row">
+              <button type="button" class="btn btn-sm" data-add-row>+ Farbe hinzufügen</button>
+              <button type="button" class="btn btn-sm btn-ghost" data-club-colors data-c1="<%= club.color_primary %>" data-c2="<%= club.color_secondary %>" data-c3="<%= club.color_accent %>">Vereinsfarben einfügen</button>
+            </div>
+            <p class="hint">Leere Zeilen werden ignoriert. Ohne Farbe wird keine Farbauswahl angezeigt.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Ausführungen & Größen -->
+      <section class="card">
+        <div class="card-header"><h2>Ausführungen &amp; Größen</h2></div>
+        <div class="card-body">
+          <% if (errors.variants) { %><div class="field-error block"><%= errors.variants %></div><% } %>
+          <div class="repeater" data-repeater="variants">
+            <div class="repeater-head variant-grid"><span>Ausführung</span><span>Abweichender Preis (€)</span><span></span></div>
+            <div data-rows>
+              <% variantRows.forEach(function (v, i) { %>
+                <div class="repeater-row variant-grid" data-row>
+                  <input name="variants[<%= i %>][name]" value="<%= v.name %>" placeholder="<%= v._blank ? 'z.B. Herren, Damen, Kinder' : '' %>" aria-label="Ausführung">
+                  <input name="variants[<%= i %>][price]" value="<%= v.price %>" inputmode="decimal" placeholder="leer = Vereinspreis" aria-label="Preis" data-calc-variant>
+                  <button type="button" class="btn btn-sm btn-ghost" data-remove-row aria-label="Ausführung entfernen">✕</button>
+                </div>
+              <% }) %>
+            </div>
+            <template>
+              <div class="repeater-row variant-grid" data-row>
+                <input name="variants[__i__][name]" value="" placeholder="z.B. Kinder" aria-label="Ausführung">
+                <input name="variants[__i__][price]" value="" inputmode="decimal" placeholder="leer = Vereinspreis" aria-label="Preis" data-calc-variant>
+                <button type="button" class="btn btn-sm btn-ghost" data-remove-row aria-label="Ausführung entfernen">✕</button>
+              </div>
+            </template>
+            <button type="button" class="btn btn-sm" data-add-row>+ Ausführung hinzufügen</button>
+            <p class="hint">Z.B. Herren/Damen/Kinder oder Kurzarm/Langarm. Ohne Ausführung entfällt die Auswahl im Shop.</p>
+          </div>
+
+          <label class="field sizes-field">
+            <span>Größen</span>
+            <input name="sizes" value="<%= form.sizes %>" placeholder="S, M, L, XL" data-sizes>
+            <span class="hint">Kommagetrennt. Schnellwahl:
+              <% sizePresets.forEach(function (p) { %>
+                <button type="button" class="pill pill-btn" data-size-preset="<%= p.sizes %>" title="<%= p.sizes %>"><%= p.label %></button>
+              <% }) %>
+              <button type="button" class="pill pill-btn" data-size-preset="" title="Feld leeren">leeren</button>
+            </span>
+          </label>
+        </div>
+      </section>
+
+      <!-- Sonderdrucke -->
+      <section class="card">
+        <div class="card-header">
+          <h2>Individuelle Sonderdrucke</h2>
+          <span class="small muted">Mitglied gibt den Text beim Bestellen ein</span>
+        </div>
+        <div class="card-body">
+          <% if (errors.print_options) { %><div class="field-error block"><%= errors.print_options %></div><% } %>
+          <div class="repeater" data-repeater="print_options">
+            <div class="repeater-head print-grid"><span>Bezeichnung</span><span>Max. Zeichen</span><span>Aufpreis (€)</span><span>Platzhalter</span><span>Pflicht</span><span></span></div>
+            <div data-rows>
+              <% printRows.forEach(function (o, i) { %>
+                <div class="repeater-row print-grid" data-row>
+                  <input name="print_options[<%= i %>][label]" value="<%= o.label %>" placeholder="<%= o._blank ? 'z.B. Name Rücken' : '' %>" aria-label="Bezeichnung">
+                  <input type="hidden" name="print_options[<%= i %>][key]" value="<%= o.key %>">
+                  <input name="print_options[<%= i %>][max_length]" value="<%= o.max_length %>" inputmode="numeric" placeholder="20" aria-label="Max. Zeichen">
+                  <input name="print_options[<%= i %>][price]" value="<%= o.price %>" inputmode="decimal" placeholder="0,00" aria-label="Aufpreis" data-calc-print>
+                  <input name="print_options[<%= i %>][placeholder]" value="<%= o.placeholder %>" placeholder="z.B. MÜLLER" aria-label="Platzhalter">
+                  <label class="checkbox"><input type="checkbox" name="print_options[<%= i %>][required]" value="1" <%= o.required ? 'checked' : '' %>><span class="sr-only">Pflicht</span></label>
+                  <button type="button" class="btn btn-sm btn-ghost" data-remove-row aria-label="Sonderdruck entfernen">✕</button>
+                </div>
+              <% }) %>
+            </div>
+            <template>
+              <div class="repeater-row print-grid" data-row>
+                <input name="print_options[__i__][label]" value="" placeholder="Bezeichnung" aria-label="Bezeichnung">
+                <input type="hidden" name="print_options[__i__][key]" value="">
+                <input name="print_options[__i__][max_length]" value="" inputmode="numeric" placeholder="20" aria-label="Max. Zeichen">
+                <input name="print_options[__i__][price]" value="" inputmode="decimal" placeholder="0,00" aria-label="Aufpreis" data-calc-print>
+                <input name="print_options[__i__][placeholder]" value="" placeholder="Platzhalter" aria-label="Platzhalter">
+                <label class="checkbox"><input type="checkbox" name="print_options[__i__][required]" value="1"><span class="sr-only">Pflicht</span></label>
+                <button type="button" class="btn btn-sm btn-ghost" data-remove-row aria-label="Sonderdruck entfernen">✕</button>
+              </div>
+            </template>
+            <div class="row">
+              <button type="button" class="btn btn-sm" data-add-row>+ Sonderdruck hinzufügen</button>
+              <button type="button" class="btn btn-sm btn-ghost" data-print-preset="name">+ Name Rücken</button>
+              <button type="button" class="btn btn-sm btn-ghost" data-print-preset="number">+ Rückennummer</button>
+              <button type="button" class="btn btn-sm btn-ghost" data-print-preset="initials">+ Initialen</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Seitenleiste -->
+    <aside class="stack product-side">
+      <section class="card">
+        <div class="card-header"><h3>Vorschau</h3></div>
+        <div class="card-body">
+          <div class="preview-image">
+            <img src="<%= previewSrc %>" alt="Artikelvorschau" data-preview-img data-has-photo="<%= form.image_path ? '1' : '' %>">
+          </div>
+          <label class="field">
+            <span><%= form.image_path ? 'Foto ersetzen' : 'Foto hochladen (optional)' %></span>
+            <input type="file" name="image" accept="image/png,image/jpeg,image/webp,image/svg+xml">
+            <span class="hint">PNG, JPG oder WebP, max. 8 MB. Am besten freigestellt auf weißem Hintergrund.</span>
+          </label>
+          <% if (form.image_path) { %>
+            <label class="checkbox"><input type="checkbox" name="remove_image" value="1"> <span>Foto entfernen (Grafik verwenden)</span></label>
+          <% } %>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-header"><h3>Beispielrechnung</h3></div>
+        <div class="card-body calc" data-calc>
+          <p class="small muted">1 Stück zum Vereinspreis, inkl. aller Sonderdrucke:</p>
+          <table class="calc-table">
+            <tr><td>Artikel</td><td class="num" data-out="article">–</td></tr>
+            <tr><td>Sonderdrucke</td><td class="num" data-out="print">–</td></tr>
+            <tr class="calc-member"><td>Mitglied zahlt im Geschäft</td><td class="num" data-out="member">–</td></tr>
+            <tr class="calc-club"><td>Wird dem Verein berechnet</td><td class="num" data-out="club">–</td></tr>
+          </table>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-header"><h3>Sichtbarkeit</h3></div>
+        <div class="card-body">
+          <label class="checkbox"><input type="checkbox" name="is_active" value="1" <%= form.is_active ? 'checked' : '' %>> <span><strong>Im Shop anzeigen</strong></span></label>
+          <label class="checkbox"><input type="checkbox" name="is_featured" value="1" <%= form.is_featured ? 'checked' : '' %>> <span>Hervorheben (z.B. „Neu“ / Startseite)</span></label>
+          <label class="field">
+            <span>Sortierung</span>
+            <input type="number" name="sort_order" value="<%= form.sort_order %>">
+            <span class="hint">Kleinere Zahl = weiter vorne.</span>
+          </label>
+        </div>
+        <div class="card-footer form-actions">
+          <button class="btn btn-primary" type="submit">Speichern</button>
+          <% if (isNew) { %>
+            <button class="btn" type="submit" name="after" value="new">Speichern &amp; weiteren anlegen</button>
+          <% } else { %>
+            <button class="btn" type="submit" name="after" value="list">Speichern &amp; zur Liste</button>
+          <% } %>
+        </div>
+      </section>
+
+      <% if (!isNew) { %>
+      <section class="card">
+        <div class="card-header"><h3>Weitere Aktionen</h3></div>
+        <div class="card-body">
+          <% if (otherClubs.length) { %>
+            <div class="field">
+              <span>In anderen Verein kopieren</span>
+              <div class="row">
+                <select name="target_club" form="copy-form" aria-label="Ziel-Verein">
+                  <% otherClubs.forEach(function (c) { %><option value="<%= c.id %>"><%= c.name %></option><% }) %>
+                </select>
+                <button class="btn btn-sm" type="submit" form="copy-form">Kopieren</button>
+              </div>
+              <span class="hint">Die Kopie kann danach im anderen Verein angepasst werden (Preis, Farben …).</span>
+            </div>
+          <% } %>
+          <button class="btn btn-danger btn-sm" type="submit" form="delete-form">Artikel löschen</button>
+        </div>
+      </section>
+      <% } %>
+    </aside>
+  </div>
+</form>
+
+<% if (!isNew) { %>
+  <form id="copy-form" method="post" action="/admin/products/<%= form.id %>/copy"><input type="hidden" name="redirect" value="target"></form>
+  <form id="delete-form" method="post" action="/admin/products/<%= form.id %>/delete" data-confirm="Artikel wirklich löschen? Bestehende Bestellungen bleiben erhalten."></form>
+<% } %>
+
+<script src="/static/js/admin-products.js"></script>
+<%- include('../partials/foot') %>

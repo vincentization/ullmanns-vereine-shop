@@ -1,0 +1,110 @@
+<%- include('../partials/head', { title, active }) %>
+<link rel="stylesheet" href="/static/css/admin-orders.css">
+
+<nav class="tabs tabs-compact">
+  <% tabs.forEach(function (t) { %>
+    <a href="/admin/orders?<%= baseQuery({ status: t.key, page: '' }) %>" class="<%= t.key === tab.key ? 'active' : '' %>">
+      <%= t.label %> <span class="tab-count"><%= tabCounts[t.key] %></span>
+    </a>
+  <% }) %>
+</nav>
+
+<form class="filters" method="get" action="/admin/orders">
+  <input type="hidden" name="status" value="<%= tab.key %>">
+  <label class="field">
+    <span>Verein</span>
+    <select name="club" data-autosubmit>
+      <option value="">Alle Vereine</option>
+      <% allClubs.forEach(function (c) { %>
+        <option value="<%= c.id %>" <%= clubId === c.id ? 'selected' : '' %>><%= c.short_name || c.name %></option>
+      <% }) %>
+    </select>
+  </label>
+  <label class="field filters-search">
+    <span>Suche</span>
+    <input type="search" name="q" value="<%= q %>" placeholder="Name, E-Mail, Bestellnr., Mannschaft …">
+  </label>
+  <button class="btn" type="submit">Filtern</button>
+  <% if (q || clubId) { %><a class="btn btn-ghost" href="/admin/orders?status=<%= tab.key %>">Zurücksetzen</a><% } %>
+  <span class="spacer"></span>
+  <a class="btn" href="/admin/orders/production?<%= baseQuery({ page: '' }) %>" target="_blank" rel="noopener" title="Alle Positionen dieser Ansicht gruppiert nach Artikel, Farbe und Größe">🖨 Druckliste</a>
+  <a class="btn" href="/admin/orders/export.csv?<%= baseQuery({ page: '' }) %>" title="Excel-taugliche CSV-Datei, eine Zeile je Position">⬇ CSV-Export</a>
+</form>
+
+<% if (!orders.length) { %>
+  <div class="card empty">
+    <% if (q || clubId) { %>Keine Bestellungen für diesen Filter gefunden.<% } else if (tab.key === 'open') { %>Keine offenen Bestellungen – alles erledigt. 👍<% } else { %>Keine Bestellungen in dieser Ansicht.<% } %>
+  </div>
+<% } else { %>
+<form method="post" action="/admin/orders/bulk-status" id="bulk-form">
+  <input type="hidden" name="back" value="/admin/orders?<%= baseQuery({ page: page > 1 ? page : '' }) %>">
+  <div class="bulk-bar row" id="bulk-bar" hidden>
+    <strong><span id="bulk-count">0</span> ausgewählt</strong>
+    <button class="btn btn-sm btn-success" name="to" value="accepted" data-confirm="Ausgewählte Bestellungen annehmen?">Annehmen</button>
+    <button class="btn btn-sm btn-primary" name="to" value="in_production" data-confirm="Ausgewählte Bestellungen auf &quot;Im Druck&quot; setzen?">Auf „Im Druck“ setzen</button>
+    <button class="btn btn-sm btn-primary" name="to" value="ready" data-confirm="Ausgewählte Bestellungen als abholbereit melden?">Abholbereit</button>
+    <button class="btn btn-sm" type="submit" formmethod="get" formaction="/admin/orders/production" formtarget="_blank">🖨 Druckliste für Auswahl</button>
+    <button class="btn btn-sm" type="submit" formmethod="get" formaction="/admin/orders/export.csv">⬇ CSV für Auswahl</button>
+  </div>
+
+  <div class="table-wrap">
+    <table class="table orders-table table-compact">
+      <thead>
+        <tr>
+          <th class="col-check"><input type="checkbox" id="check-all" aria-label="Alle auswählen"></th>
+          <th>Nr.</th>
+          <th>Datum</th>
+          <th>Verein</th>
+          <th>Besteller</th>
+          <th>Mannschaft</th>
+          <th class="num">Stück</th>
+          <th class="num" title="Zahlt das Mitglied bei Abholung">Mitglied</th>
+          <th class="num" title="Wird dem Verein berechnet">Verein</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+      <% orders.forEach(function (o) { %>
+        <tr class="<%= o.status === 'new' ? 'is-highlight' : '' %> <%= ['rejected', 'cancelled'].includes(o.status) ? 'is-muted' : '' %>" data-href="/admin/orders/<%= o.id %>">
+          <td class="col-check"><input type="checkbox" name="ids" value="<%= o.id %>" aria-label="Bestellung <%= o.order_number %> auswählen"></td>
+          <td class="nowrap">
+            <a class="mono" href="/admin/orders/<%= o.id %>"><strong><%= o.order_number %></strong></a>
+            <% if (o.unread) { %><span class="unread-dot" title="<%= o.unread %> ungelesene Kundennachricht(en)">✉ <%= o.unread %></span><% } %>
+          </td>
+          <td class="small nowrap"><%= h.date(o.created_at) %><div class="muted"><%= h.dateTime(o.created_at).split(', ')[1] %></div></td>
+          <td class="nowrap"><span class="swatch" style="background: <%= o.color_primary %>"></span> <%= o.club_short || o.club_name %></td>
+          <td>
+            <%= o.first_name %> <%= o.last_name %>
+            <div class="small muted cell-ellipsis" title="<%= o.email %>"><%= o.email %></div>
+          </td>
+          <td><%= o.team || '–' %></td>
+          <td class="num"><%= o.item_count %></td>
+          <td class="num"><strong><%= h.money(o.member_total_cents) %></strong></td>
+          <td class="num"><%= o.club_total_cents ? h.money(o.club_total_cents) : '–' %></td>
+          <td class="nowrap"><span class="badge badge-<%= h.statusTone(o.status) %>"><%= h.statusLabel(o.status) %></span></td>
+        </tr>
+      <% }) %>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="7"><%= total %> Bestellung<%= total === 1 ? '' : 'en' %> in dieser Ansicht</td>
+          <td class="num"><%= h.money(sums.member) %></td>
+          <td class="num"><%= h.money(sums.club) %></td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</form>
+
+<% if (pages > 1) { %>
+<nav class="pagination">
+  <% if (page > 1) { %><a class="btn btn-sm" href="/admin/orders?<%= baseQuery({ page: page - 1 }) %>">← Zurück</a><% } %>
+  <span class="muted">Seite <%= page %> von <%= pages %></span>
+  <% if (page < pages) { %><a class="btn btn-sm" href="/admin/orders?<%= baseQuery({ page: page + 1 }) %>">Weiter →</a><% } %>
+</nav>
+<% } %>
+<% } %>
+
+<script src="/static/js/admin-orders.js"></script>
+<%- include('../partials/foot') %>

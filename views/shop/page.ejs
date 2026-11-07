@@ -1,0 +1,8 @@
+<%- include('partials/head', { title: title, active: 'page:' + page.slug }) %>
+<div class="container narrow">
+  <article class="content-page">
+    <h1 class="page-title"><%= page.title %></h1>
+    <div class="prose"><%- h.markdown(page.content) %></div>
+  </article>
+</div>
+<%- include('partials/foot') %>

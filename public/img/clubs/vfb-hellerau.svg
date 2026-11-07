@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="VfB Hellerau-Klotzsche (Platzhalter-Wappen)">
+  <!-- Stilisierter Platzhalter. Das Original-Logo bitte im Backend unter "Vereine" hochladen. -->
+  <defs>
+    <path id="arcTop" d="M32.5 139 A78 78 0 1 1 167.5 139"/>
+    <clipPath id="inner"><circle cx="100" cy="100" r="58"/></clipPath>
+  </defs>
+  <circle cx="100" cy="100" r="96" fill="#ffffff" stroke="#1b2d9a" stroke-width="6"/>
+  <circle cx="100" cy="100" r="60" fill="#ffffff" stroke="#1b2d9a" stroke-width="4"/>
+  <text font-family="Georgia, 'Times New Roman', serif" font-size="17" font-weight="700" letter-spacing="2" fill="#1b2d9a">
+    <textPath href="#arcTop" startOffset="50%" text-anchor="middle">HELLERAU – KLOTZSCHE</textPath>
+  </text>
+  <text x="100" y="186" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-weight="700" font-size="24" fill="#1b2d9a" letter-spacing="6">V f B</text>
+  <circle cx="50" cy="160" r="3" fill="#1b2d9a"/><circle cx="150" cy="160" r="3" fill="#1b2d9a"/>
+  <g clip-path="url(#inner)">
+    <rect x="40" y="40" width="120" height="120" fill="#eef2ff"/>
+    <!-- Giebel -->
+    <path d="M56 84 L100 52 L144 84 Z" fill="#1b2d9a"/>
+    <path d="M70 80 L100 59 L130 80 Z" fill="#ffffff"/>
+    <rect x="54" y="84" width="92" height="8" fill="#1b2d9a"/>
+    <!-- Säulen blau/weiß -->
+    <rect x="58" y="92" width="84" height="54" fill="#ffffff"/>
+    <rect x="60" y="92" width="9" height="54" fill="#1b2d9a"/>
+    <rect x="78" y="92" width="9" height="54" fill="#1b2d9a"/>
+    <rect x="96" y="92" width="9" height="54" fill="#1b2d9a"/>
+    <rect x="114" y="92" width="9" height="54" fill="#1b2d9a"/>
+    <rect x="132" y="92" width="9" height="54" fill="#1b2d9a"/>
+    <rect x="52" y="146" width="96" height="8" fill="#1b2d9a"/>
+    <!-- Baum -->
+    <rect x="112" y="118" width="5" height="30" fill="#5b3a1e"/>
+    <circle cx="106" cy="112" r="14" fill="#2f9a45"/>
+    <circle cx="124" cy="106" r="15" fill="#2f9a45"/>
+    <circle cx="118" cy="122" r="13" fill="#2f9a45"/>
+    <circle cx="102" cy="124" r="10" fill="#2f9a45"/>
+    <circle cx="121" cy="103" r="5" fill="#46b85c"/>
+    <circle cx="104" cy="110" r="4" fill="#46b85c"/>
+  </g>
+</svg>

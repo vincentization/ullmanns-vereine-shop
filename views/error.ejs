@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> – <%= settings.store_name %></title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: #f5f5f5; color: #222; margin: 0; display: grid; place-items: center; min-height: 100vh; padding: 16px; }
+    .box { background: #fff; padding: 40px; border-radius: 8px; max-width: 480px; text-align: center; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+    h1 { margin: 0 0 8px; font-size: 48px; color: #d7141a; }
+    a { color: #d7141a; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1><%= status %></h1>
+    <p><strong><%= title %></strong></p>
+    <p><%= message %></p>
+    <p><a href="/">Zur Startseite</a></p>
+  </div>
+</body>
+</html>

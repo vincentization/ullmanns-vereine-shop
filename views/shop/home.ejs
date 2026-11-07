@@ -1,0 +1,73 @@
+<%- include('partials/head', { title: title, active: 'home' }) %>
+<section class="hero<%= club.hero_image_path ? ' hero-has-image' : '' %>"<% if (club.hero_image_path) { %> style="--hero-image: url('<%= club.hero_image_path %>')"<% } %>>
+  <div class="container hero-inner">
+    <div class="hero-text">
+      <p class="hero-kicker">Offizielle Vereinskollektion</p>
+      <h1><%= club.tagline || club.name %></h1>
+      <% if (club.intro_text) { %><div class="hero-intro prose"><%- h.markdown(club.intro_text) %></div><% } %>
+      <a class="btn btn-hero" href="#kollektion">Zur Kollektion</a>
+    </div>
+    <% if (club.logo_path) { %>
+      <div class="hero-logo"><img src="<%= club.logo_path %>" alt="" width="220" height="220"></div>
+    <% } %>
+  </div>
+</section>
+
+<section class="steps" aria-label="So funktioniert's">
+  <div class="container">
+    <h2 class="visually-hidden">So funktioniert's</h2>
+    <ol class="steps-list">
+      <li><span class="step-num">1</span><div><strong>Bestellen</strong><span>Artikel, Größe &amp; Druck wählen und verbindlich bestellen</span></div></li>
+      <li><span class="step-num">2</span><div><strong>Sporthaus prüft</strong><span>Wir bestätigen deine Bestellung oder melden uns bei Rückfragen</span></div></li>
+      <li><span class="step-num">3</span><div><strong>Druck &amp; Beflockung</strong><span>Vereinslogo und dein Name kommen auf die Kleidung</span></div></li>
+      <li><span class="step-num">4</span><div><strong>Abholen &amp; bezahlen</strong><span>Im <%= settings.store_name %> – bar oder mit Karte</span></div></li>
+    </ol>
+  </div>
+</section>
+
+<section class="collection container" id="kollektion">
+  <div class="section-head">
+    <h2>Unsere Kollektion</h2>
+    <p class="muted"><%= totalCount %> Artikel<% if (clubFunded) { %> · bei einigen Artikeln gibt der Verein etwas dazu<% } %></p>
+  </div>
+
+  <form class="toolbar" method="get" action="<%= homeUrl %>#kollektion" role="search">
+    <% if (category) { %><input type="hidden" name="kategorie" value="<%= category %>"><% } %>
+    <label class="search-field">
+      <span class="visually-hidden">Suche</span>
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M10 2a8 8 0 0 1 6.3 12.9l5.4 5.4-1.4 1.4-5.4-5.4A8 8 0 1 1 10 2Zm0 2a6 6 0 1 0 0 12 6 6 0 0 0 0-12Z"/></svg>
+      <input type="search" name="q" value="<%= q %>" placeholder="Artikel suchen …">
+    </label>
+    <label class="sort-field">
+      <span class="visually-hidden">Sortierung</span>
+      <select name="sort" data-autosubmit>
+        <% Object.keys(sorts).forEach(function (k) { %>
+          <option value="<%= k %>" <%= sort === k ? 'selected' : '' %>><%= sorts[k].label %></option>
+        <% }) %>
+      </select>
+    </label>
+    <button class="btn btn-outline" type="submit">Anwenden</button>
+  </form>
+
+  <% if (categories.length > 1) { %>
+    <nav class="chips" aria-label="Kategorien">
+      <% function catUrl(c) { var p = new URLSearchParams(); if (c) p.set('kategorie', c); if (q) p.set('q', q); if (sort !== 'empfohlen') p.set('sort', sort); var s = p.toString(); return homeUrl + (s ? '?' + s : '') + '#kollektion'; } %>
+      <a class="chip <%= !category ? 'active' : '' %>" href="<%= catUrl('') %>">Alle</a>
+      <% categories.forEach(function (c) { %>
+        <a class="chip <%= category === c ? 'active' : '' %>" href="<%= catUrl(c) %>"><%= c %></a>
+      <% }) %>
+    </nav>
+  <% } %>
+
+  <% if (cards.length) { %>
+    <div class="product-grid">
+      <% cards.forEach(function (card) { %><%- include('partials/product-card', { card: card }) %><% }) %>
+    </div>
+  <% } else { %>
+    <div class="empty-state">
+      <p><strong>Keine Artikel gefunden.</strong></p>
+      <% if (q || category) { %><p><a href="<%= homeUrl %>#kollektion">Alle Artikel anzeigen</a></p><% } else { %><p>Die Kollektion wird gerade zusammengestellt. Schau bald wieder vorbei!</p><% } %>
+    </div>
+  <% } %>
+</section>
+<%- include('partials/foot') %>

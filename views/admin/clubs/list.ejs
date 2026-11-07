@@ -1,0 +1,58 @@
+<%- include('../partials/head', { title, active }) %>
+<link rel="stylesheet" href="/static/css/admin-catalog.css">
+
+<div class="page-header">
+  <p class="muted" style="margin:0">Jeder Verein hat einen eigenen Shop mit eigener Adresse, eigenem Branding und eigenem Sortiment.</p>
+  <div class="actions">
+    <a class="btn btn-primary" href="/admin/clubs/new">+ Neuen Vereinsshop anlegen</a>
+  </div>
+</div>
+
+<% if (!clubs.length) { %>
+  <div class="card empty">
+    <p><strong>Noch kein Verein angelegt.</strong></p>
+    <p>Lege den ersten Vereinsshop an – das dauert nur eine Minute.</p>
+    <a class="btn btn-primary" href="/admin/clubs/new">+ Neuen Vereinsshop anlegen</a>
+  </div>
+<% } else { %>
+<div class="club-grid">
+  <% clubs.forEach(function (c) { const s = stats[c.id] || {}; %>
+    <article class="card club-card <%= c.is_active ? '' : 'is-inactive' %>">
+      <div class="club-card-head" style="--c: <%= c.color_primary %>; --t: <%= h.contrastText(c.color_primary) %>; --a: <%= c.color_accent %>">
+        <div class="club-logo">
+          <% if (c.logo_path) { %><img src="<%= c.logo_path %>" alt=""><% } else { %><span><%= (c.short_name || c.name).slice(0, 3) %></span><% } %>
+        </div>
+        <div>
+          <h3><%= c.name %></h3>
+          <small><%= c.tagline || 'Vereinskollektion' %></small>
+        </div>
+      </div>
+      <div class="club-card-body">
+        <div class="row" style="margin-bottom:10px">
+          <% if (c.is_active) { %><span class="badge badge-green">Shop aktiv</span><% } else { %><span class="badge badge-red">Shop deaktiviert</span><% } %>
+          <span class="pill mono" title="Präfix der Bestellnummern"><%= c.order_prefix %></span>
+          <% if (c.domain) { %><span class="pill" title="Eigene Domain"><%= c.domain %></span><% } %>
+        </div>
+        <div class="club-stats">
+          <div><a href="/admin/products?club=<%= c.id %>"><strong><%= s.activeProducts || 0 %></strong><span>Artikel aktiv<% if ((s.products || 0) > (s.activeProducts || 0)) { %> / <%= s.products %><% } %></span></a></div>
+          <div><a href="/admin/orders?club=<%= c.id %>"><strong style="<%= s.openOrders ? 'color: var(--red)' : '' %>"><%= s.openOrders || 0 %></strong><span>offene Bestellungen</span></a></div>
+          <div><a href="/admin/orders?club=<%= c.id %>"><strong><%= s.orders || 0 %></strong><span>Bestellungen gesamt</span></a></div>
+        </div>
+        <div class="club-url">
+          <code>/<%= c.slug %></code>
+          <button class="btn btn-sm btn-ghost" type="button" data-copy="/<%= c.slug %>" title="Shop-Link kopieren">Link kopieren</button>
+        </div>
+      </div>
+      <div class="club-card-actions">
+        <a class="btn btn-sm btn-secondary" href="/<%= c.slug %>" target="_blank" rel="noopener">Shop öffnen ↗</a>
+        <a class="btn btn-sm" href="/admin/clubs/<%= c.id %>/edit">Bearbeiten</a>
+        <a class="btn btn-sm" href="/admin/products?club=<%= c.id %>">Sortiment</a>
+        <a class="btn btn-sm" href="/admin/pages?club=<%= c.id %>">Seiten<% if (s.pages) { %> (<%= s.pages %>)<% } %></a>
+        <a class="btn btn-sm" href="/admin/orders?club=<%= c.id %>">Bestellungen</a>
+      </div>
+    </article>
+  <% }) %>
+</div>
+<% } %>
+
+<%- include('../partials/foot') %>

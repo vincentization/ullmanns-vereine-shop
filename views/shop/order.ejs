@@ -1,0 +1,117 @@
+<%- include('partials/head', { title: title, active: 'orders' }) %>
+<% var st = h.ORDER_STATUSES[order.status] || { label: order.status, tone: 'gray', customerText: '' }; var closed = order.status === 'rejected' || order.status === 'cancelled'; %>
+<div class="container narrow-wide">
+  <% if (isNew) { %>
+    <div class="thanks-box">
+      <div class="thanks-icon" aria-hidden="true">✓</div>
+      <div>
+        <h1>Vielen Dank für deine Bestellung!</h1>
+        <p>Deine Bestellnummer lautet <strong><%= order.order_number %></strong>. Das <%= settings.store_name %> prüft deine Bestellung und meldet sich bei Rückfragen.</p>
+        <p class="save-link"><strong>Wichtig:</strong> Speichere dir diesen Link, um den Status zu verfolgen und auf Rückfragen zu antworten.
+          <span class="link-copy">
+            <input type="text" readonly value="<%= statusUrl %>" data-absolute-url aria-label="Link zur Bestellung">
+            <button type="button" class="btn btn-outline btn-sm" data-copy-input>Link kopieren</button>
+          </span>
+        </p>
+      </div>
+    </div>
+  <% } %>
+
+  <div class="order-head">
+    <div>
+      <p class="muted small">Bestellung vom <%= h.dateTime(order.created_at) %></p>
+      <h1 class="page-title"><%= isNew ? 'Bestellstatus' : 'Bestellung ' + order.order_number %></h1>
+    </div>
+    <span class="badge badge-<%= st.tone %> badge-lg"><%= st.label %></span>
+  </div>
+
+  <% if (closed) { %>
+    <div class="status-closed">
+      <strong><%= st.label %></strong>
+      <p><%= st.customerText %></p>
+      <% if (order.reject_reason) { %><p><strong>Begründung:</strong> <%= order.reject_reason %></p><% } %>
+    </div>
+  <% } else { %>
+    <ol class="status-track" aria-label="Bestellfortschritt">
+      <% steps.forEach(function (s, i) { var cls = i < currentStep ? 'done' : i === currentStep ? 'current' : ''; %>
+        <li class="<%= cls %>"<%= i === currentStep ? ' aria-current="step"' : '' %>><span class="dot"><%= i < currentStep ? '✓' : i + 1 %></span><span class="label"><%= s.label %></span></li>
+      <% }) %>
+    </ol>
+    <div class="status-text<%= order.status === 'question' ? ' status-question' : '' %>">
+      <% if (order.status === 'question') { %><strong>Rückfrage vom Sporthaus</strong><% } %>
+      <p><%= st.customerText %></p>
+      <% if (order.status === 'question') { %><a class="btn btn-primary btn-sm" href="#nachrichten">Jetzt antworten</a><% } %>
+    </div>
+  <% } %>
+
+  <div class="cart-layout order-layout">
+    <div class="stack-lg">
+      <section class="card">
+        <h2>Bestellte Artikel</h2>
+        <ul class="order-items">
+          <% order.items.forEach(function (it) { %>
+            <li>
+              <div>
+                <strong><%= it.quantity %> × <%= it.product_name %></strong>
+                <% if (it.brand || it.sku) { %><span class="small muted"><%= [it.brand, it.sku ? 'Art.-Nr. ' + it.sku : ''].filter(Boolean).join(' · ') %></span><% } %>
+                <%- include('partials/line-details', { variant: it.variant, color: it.color, size: it.size, prints: it.print_details }) %>
+              </div>
+              <div class="cart-line-price">
+                <strong><%= h.money(it.line_member_cents) %></strong>
+                <% if (it.line_club_cents) { %><span class="small club-share">Verein zahlt <%= h.money(it.line_club_cents) %></span><% } %>
+              </div>
+            </li>
+          <% }) %>
+        </ul>
+        <div class="order-totals">
+          <% if (order.club_total_cents) { %>
+            <div class="sum-row"><span>Gesamtwert</span><span><%= h.money(order.total_cents) %></span></div>
+            <div class="sum-row club-share"><span>davon zahlt der Verein</span><span>− <%= h.money(order.club_total_cents) %></span></div>
+          <% } %>
+          <div class="sum-row sum-total"><span>Du zahlst bei Abholung</span><strong><%= h.money(order.member_total_cents) %>*</strong></div>
+        </div>
+      </section>
+
+      <section class="card" id="nachrichten">
+        <h2>Nachrichten &amp; Rückfragen</h2>
+        <% if (!order.messages.length) { %>
+          <p class="muted">Noch keine Nachrichten. Hast du eine Frage zu deiner Bestellung? Schreib uns hier.</p>
+        <% } else { %>
+          <ul class="messages">
+            <% order.messages.forEach(function (m) { %>
+              <li class="message message-<%= m.sender === 'customer' ? 'customer' : 'shop' %>">
+                <div class="message-meta"><strong><%= m.sender === 'customer' ? 'Du' : (m.author || settings.store_name) %></strong> · <%= h.dateTime(m.created_at) %></div>
+                <div class="message-body"><%= m.body %></div>
+              </li>
+            <% }) %>
+          </ul>
+        <% } %>
+        <form method="post" action="<%= base %>/bestellung/<%= encodeURIComponent(order.order_number) %>/nachricht" class="message-form">
+          <input type="hidden" name="t" value="<%= token %>">
+          <label class="field">
+            <span class="field-label"><%= order.status === 'question' ? 'Deine Antwort' : 'Nachricht an das Sporthaus' %></span>
+            <textarea name="body" rows="3" required maxlength="5000" placeholder="Deine Nachricht …"></textarea>
+          </label>
+          <button class="btn btn-primary" type="submit">Senden</button>
+        </form>
+      </section>
+    </div>
+
+    <aside class="cart-summary card">
+      <h2>Deine Angaben</h2>
+      <dl class="kv">
+        <dt>Name</dt><dd><%= order.first_name %> <%= order.last_name %></dd>
+        <dt>E-Mail</dt><dd><%= order.email %></dd>
+        <% if (order.phone) { %><dt>Telefon</dt><dd><%= order.phone %></dd><% } %>
+        <% if (order.member_number) { %><dt>Mitgliedsnr.</dt><dd><%= order.member_number %></dd><% } %>
+        <% if (order.team) { %><dt>Mannschaft</dt><dd><%= order.team %></dd><% } %>
+        <% if (order.customer_note) { %><dt>Anmerkung</dt><dd class="pre-line"><%= order.customer_note %></dd><% } %>
+      </dl>
+      <h2>Abholung</h2>
+      <p><%= settings.store_name %><br><%= settings.store_street %><br><%= settings.store_zip_city %></p>
+      <p class="pre-line small"><%= settings.store_opening_hours %></p>
+      <% if (settings.store_phone) { %><p class="small">Fragen? <a href="tel:<%= settings.store_phone.replace(/[^0-9+]/g, '') %>"><%= settings.store_phone %></a></p><% } %>
+    </aside>
+  </div>
+</div>
+<%- include('partials/foot') %>

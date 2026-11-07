@@ -1,0 +1,45 @@
+<%- include('../partials/head', { title, active }) %>
+<link rel="stylesheet" href="/static/css/admin-catalog.css">
+
+<form method="post" action="/admin/settings" class="grid-main-side">
+  <section class="card">
+    <div class="card-header"><h2>Stammdaten Sportgeschäft</h2></div>
+    <div class="card-body">
+      <p class="muted small">Diese Angaben erscheinen in allen Vereinsshops (Kopf, Footer, Abholhinweise).</p>
+      <div class="field-row">
+        <% fields.filter(function (f) { return !f.textarea; }).forEach(function (f) { %>
+          <label class="field">
+            <span><%= f.label %><%= f.required ? ' *' : '' %></span>
+            <input type="<%= f.type || 'text' %>" name="<%= f.key %>" value="<%= values[f.key] || '' %>" class="<%= errors[f.key] ? 'is-invalid' : '' %>">
+            <% if (errors[f.key]) { %><span class="field-error"><%= errors[f.key] %></span><% } %>
+          </label>
+        <% }) %>
+      </div>
+      <% fields.filter(function (f) { return f.textarea; }).forEach(function (f) { %>
+        <label class="field">
+          <span><%= f.label %></span>
+          <textarea name="<%= f.key %>" rows="3"><%= values[f.key] || '' %></textarea>
+          <% if (f.hint) { %><span class="hint"><%= f.hint %></span><% } %>
+        </label>
+      <% }) %>
+    </div>
+    <div class="card-footer form-actions">
+      <button class="btn btn-primary" type="submit">Speichern</button>
+      <button class="btn btn-ghost" type="submit" formaction="/admin/settings/reset" data-confirm="Alle Felder auf die Standardwerte zurücksetzen?">Standardwerte</button>
+    </div>
+  </section>
+
+  <aside class="card">
+    <div class="card-header"><h3>So erscheint es im Shop</h3></div>
+    <div class="card-body small">
+      <strong><%= values.store_name %></strong><br>
+      <%= values.store_street %><br>
+      <%= values.store_zip_city %><br><br>
+      Tel. <%= values.store_phone %><br>
+      <%= values.store_email %><br><br>
+      <strong>Öffnungszeiten</strong><br>
+      <% String(values.store_opening_hours || '').split('\n').forEach(function (l) { %><%= l %><br><% }) %>
+    </div>
+  </aside>
+</form>
+<%- include('../partials/foot') %>

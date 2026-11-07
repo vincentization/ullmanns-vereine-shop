@@ -1,0 +1,74 @@
+<%- include('partials/head', { title: title, active: 'cart' }) %>
+<div class="container narrow-wide">
+  <h1 class="page-title">Warenkorb</h1>
+  <% if (!summary.lines.length) { %>
+    <div class="empty-state">
+      <p><strong>Dein Warenkorb ist leer.</strong></p>
+      <p><a class="btn btn-primary" href="<%= homeUrl %>#kollektion">Zur Kollektion</a></p>
+    </div>
+  <% } else { %>
+    <% if (summary.hasErrors) { %>
+      <div class="alert alert-error">Einige Artikel in deinem Warenkorb sind so nicht mehr bestellbar. Bitte entferne sie oder lege sie neu in den Warenkorb.</div>
+    <% } %>
+    <div class="cart-layout">
+      <ul class="cart-lines">
+        <% summary.lines.forEach(function (line) { var p = line.product; var color = p && p.colors.find(function (c) { return c.name === line.color; }); %>
+          <li class="cart-line<%= line.error ? ' has-error' : '' %>">
+            <% if (p) { %>
+              <a class="cart-line-media" href="<%= base %>/artikel/<%= p.id %>"><img src="<%= h.productImage(p, color) %>" alt="<%= p.name %>" width="120" height="120" loading="lazy"></a>
+            <% } else { %>
+              <span class="cart-line-media"></span>
+            <% } %>
+            <div class="cart-line-main">
+              <% if (p && p.brand) { %><span class="product-brand"><%= p.brand %></span><% } %>
+              <h2 class="cart-line-title"><%= p ? p.name : 'Nicht mehr verfügbarer Artikel' %></h2>
+              <%- include('partials/line-details', { variant: line.variant, color: line.color, size: line.size, prints: line.unit ? line.unit.printDetails : [] }) %>
+              <% if (line.error) { %><p class="line-error"><%= line.error %></p><% } %>
+              <div class="cart-line-actions">
+                <form method="post" action="<%= base %>/warenkorb/update" class="qty-form">
+                  <input type="hidden" name="lineId" value="<%= line.id %>">
+                  <label class="visually-hidden" for="q-<%= line.id %>">Menge</label>
+                  <div class="qty-control qty-control-sm">
+                    <button type="button" class="qty-btn" data-qty="-1" aria-label="Menge verringern">−</button>
+                    <input id="q-<%= line.id %>" type="number" name="quantity" min="0" max="99" value="<%= line.quantity %>" inputmode="numeric" data-autosubmit>
+                    <button type="button" class="qty-btn" data-qty="1" aria-label="Menge erhöhen">+</button>
+                  </div>
+                  <button class="btn btn-link btn-sm js-hide" type="submit">Aktualisieren</button>
+                </form>
+                <form method="post" action="<%= base %>/warenkorb/remove">
+                  <input type="hidden" name="lineId" value="<%= line.id %>">
+                  <button class="btn btn-link btn-sm" type="submit">Entfernen</button>
+                </form>
+              </div>
+            </div>
+            <div class="cart-line-price">
+              <% if (line.unit) { %>
+                <strong><%= h.money(line.lineMemberCents) %></strong>
+                <span class="small muted"><%= line.quantity %> × <%= h.money(line.unit.memberCents) %></span>
+                <% if (line.lineClubCents) { %><span class="small club-share">Verein zahlt <%= h.money(line.lineClubCents) %></span><% } %>
+              <% } %>
+            </div>
+          </li>
+        <% }) %>
+      </ul>
+
+      <aside class="cart-summary card">
+        <h2>Zusammenfassung</h2>
+        <div class="sum-row"><span>Artikel</span><span><%= summary.count %></span></div>
+        <% if (summary.clubTotal) { %>
+          <div class="sum-row"><span>Gesamtwert</span><span><%= h.money(summary.total) %></span></div>
+          <div class="sum-row club-share"><span>davon zahlt der Verein</span><span>− <%= h.money(summary.clubTotal) %></span></div>
+        <% } %>
+        <div class="sum-row sum-total"><span>Du zahlst im Geschäft</span><strong><%= h.money(summary.memberTotal) %>*</strong></div>
+        <p class="small muted">Bezahlt wird bei Abholung im <%= settings.store_name %>. Online fallen keine Kosten an.</p>
+        <% if (summary.hasErrors) { %>
+          <button class="btn btn-primary btn-block" disabled>Zur Kasse</button>
+        <% } else { %>
+          <a class="btn btn-primary btn-lg btn-block" href="<%= base %>/kasse">Zur Kasse</a>
+        <% } %>
+        <a class="btn btn-link btn-block" href="<%= homeUrl %>#kollektion">Weiter einkaufen</a>
+      </aside>
+    </div>
+  <% } %>
+</div>
+<%- include('partials/foot') %>

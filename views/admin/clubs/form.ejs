@@ -1,0 +1,260 @@
+<%- include('../partials/head', { title, active }) %>
+<link rel="stylesheet" href="/static/css/admin-catalog.css">
+<%
+  const c = club;
+  const e = errors || {};
+  const v = function (k) { return c[k] == null ? '' : c[k]; };
+  const fe = function (k) { return e[k] ? '<span class="field-error">' + e[k].replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</span>' : ''; };
+  const inv = function (k) { return e[k] ? 'is-invalid' : ''; };
+%>
+
+<div class="page-header">
+  <a href="/admin/clubs" class="small">← Alle Vereine</a>
+  <% if (!isNew) { %>
+    <div class="actions">
+      <a class="btn btn-sm btn-secondary" href="/<%= c.slug %>" target="_blank" rel="noopener">Shop öffnen ↗</a>
+      <a class="btn btn-sm" href="/admin/products?club=<%= c.id %>">Sortiment (<%= stats.products || 0 %>)</a>
+      <a class="btn btn-sm" href="/admin/pages?club=<%= c.id %>">Seiten (<%= stats.pages || 0 %>)</a>
+      <a class="btn btn-sm" href="/admin/orders?club=<%= c.id %>">Bestellungen (<%= stats.orders || 0 %>)</a>
+    </div>
+  <% } %>
+</div>
+
+<% if (typeof justCreated !== 'undefined' && justCreated) { %>
+  <div class="card created-box" style="margin-bottom:16px">
+    <div class="card-body row">
+      <div>
+        <strong>🎉 Der Shop ist online:</strong>
+        <a href="/<%= c.slug %>" target="_blank" rel="noopener" class="mono">/<%= c.slug %></a>
+        <button class="btn btn-sm btn-ghost" type="button" data-copy="/<%= c.slug %>">Link kopieren</button>
+        <div class="small muted">Nächste Schritte: Begrüßungstext ergänzen, Sortiment pflegen und den Link an den Verein schicken.</div>
+      </div>
+      <span class="spacer"></span>
+      <a class="btn btn-sm btn-primary" href="/admin/products?club=<%= c.id %>">Sortiment pflegen →</a>
+    </div>
+  </div>
+<% } %>
+
+<% if (Object.keys(e).length) { %>
+  <div class="alert alert-error"><strong>Bitte korrigiere die markierten Angaben.</strong></div>
+<% } %>
+
+<form method="post" enctype="multipart/form-data" action="<%= isNew ? '/admin/clubs/new' : '/admin/clubs/' + c.id + '/edit' %>" id="club-form" novalidate>
+  <div class="grid-main-side">
+    <div class="stack">
+      <section class="card">
+        <div class="card-header"><h2><%= isNew ? '1. Verein' : 'Verein & Shop-Adresse' %></h2></div>
+        <div class="card-body">
+          <label class="field">
+            <span>Vollständiger Vereinsname *</span>
+            <input name="name" value="<%= v('name') %>" class="<%= inv('name') %>" placeholder="z.B. VfB Hellerau-Klotzsche e.V." required data-club-name <%= isNew ? 'autofocus' : '' %>>
+            <%- fe('name') %>
+          </label>
+          <div class="field-row">
+            <label class="field">
+              <span>Kurzname</span>
+              <input name="short_name" value="<%= v('short_name') %>" placeholder="z.B. VfB Hellerau" data-club-short>
+              <span class="hint">Für Navigation und Überschriften.</span>
+            </label>
+            <label class="field">
+              <span>Bestellnummer-Präfix</span>
+              <input name="order_prefix" value="<%= v('order_prefix') %>" class="mono <%= inv('order_prefix') %>" placeholder="VFB" maxlength="8" data-club-prefix style="text-transform: uppercase">
+              <span class="hint">Bestellungen heißen dann z.B. <span class="mono" data-prefix-example><%= v('order_prefix') || 'VFB' %></span>-2026-0001</span>
+              <%- fe('order_prefix') %>
+            </label>
+          </div>
+          <label class="field">
+            <span>Shop-Adresse *</span>
+            <span class="slug-field">
+              <span class="slug-prefix" data-origin>/</span>
+              <input name="slug" value="<%= v('slug') %>" class="mono <%= inv('slug') %>" placeholder="vfb-hellerau" data-club-slug <%= v('slug') ? 'data-touched="1"' : '' %>>
+            </span>
+            <span class="hint">Nur Kleinbuchstaben, Ziffern und Bindestriche. <%= isNew ? 'Wird automatisch aus dem Namen erzeugt.' : 'Achtung: Bei Änderung funktionieren bereits verschickte Links nicht mehr.' %></span>
+            <%- fe('slug') %>
+          </label>
+          <% if (!isNew) { %>
+            <label class="field">
+              <span>Eigene Domain (optional)</span>
+              <input name="domain" value="<%= v('domain') %>" class="<%= inv('domain') %>" placeholder="shop.vfb-hellerau.de">
+              <span class="hint">Wenn der Verein eine eigene (Sub-)Domain auf diesen Server zeigen lässt, erscheint der Shop dort direkt unter „/“.</span>
+              <%- fe('domain') %>
+            </label>
+          <% } %>
+          <label class="field">
+            <span>Slogan</span>
+            <input name="tagline" value="<%= v('tagline') %>" placeholder="z.B. Dein Verein im Dresdner Norden" data-club-tagline>
+          </label>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-header"><h2><%= isNew ? '2. Branding' : 'Branding' %></h2></div>
+        <div class="card-body">
+          <div class="grid-3">
+            <% [['color_primary', 'Hauptfarbe', 'Header, Buttons'], ['color_secondary', 'Zweitfarbe', 'Schrift auf Flächen, Hintergründe'], ['color_accent', 'Akzentfarbe', 'Streifen, Hinweise']].forEach(function (f) { %>
+              <label class="field">
+                <span><%= f[1] %></span>
+                <span class="color-field">
+                  <input type="color" value="<%= v(f[0]) %>" data-color-picker="<%= f[0] %>" aria-label="<%= f[1] %> wählen">
+                  <input type="text" name="<%= f[0] %>" value="<%= v(f[0]) %>" class="<%= inv(f[0]) %>" maxlength="7" data-color-text="<%= f[0] %>">
+                </span>
+                <span class="hint"><%= f[2] %></span>
+                <%- fe(f[0]) %>
+              </label>
+            <% }) %>
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <span>Vereinslogo</span>
+              <% if (c.logo_path) { %>
+                <div class="current-image"><img src="<%= c.logo_path %>" alt="Aktuelles Logo">
+                  <label class="checkbox"><input type="checkbox" name="remove_logo" value="1"> <span>entfernen</span></label></div>
+              <% } %>
+              <input type="file" name="logo" accept="image/png,image/jpeg,image/webp,image/svg+xml" data-logo-input>
+              <span class="hint">PNG/SVG mit transparentem Hintergrund, quadratisch.</span>
+            </div>
+            <div class="field">
+              <span>Headerbild (optional)</span>
+              <% if (c.hero_image_path) { %>
+                <div class="current-image"><img src="<%= c.hero_image_path %>" alt="Aktuelles Headerbild">
+                  <label class="checkbox"><input type="checkbox" name="remove_hero" value="1"> <span>entfernen</span></label></div>
+              <% } %>
+              <input type="file" name="hero_image" accept="image/png,image/jpeg,image/webp" data-hero-input>
+              <span class="hint">Querformat, z.B. Mannschaftsfoto (mind. 1600 px breit).</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <% if (isNew) { %>
+        <section class="card">
+          <div class="card-header"><h2>3. Startinhalt</h2></div>
+          <div class="card-body">
+            <label class="field">
+              <span>Sortiment übernehmen von</span>
+              <select name="copy_from">
+                <option value="">– Leeres Sortiment –</option>
+                <% copyFromOptions.forEach(function (o) { %>
+                  <option value="<%= o.id %>" <%= String(c.copy_from) === String(o.id) ? 'selected' : '' %>><%= o.name %> (<%= o.n %> Artikel)</option>
+                <% }) %>
+              </select>
+              <span class="hint">Alle Artikel werden mit Preisen, Farben und Druckoptionen kopiert und können danach angepasst werden.</span>
+            </label>
+            <label class="checkbox">
+              <input type="checkbox" name="create_pages" value="1" <%= c.create_pages ? 'checked' : '' %>>
+              <span><strong>Standardseiten anlegen</strong><br><span class="small muted">„Abholung &amp; Bezahlung“, „Größentabelle“ und „Häufige Fragen“ mit Vorlagentexten</span></span>
+            </label>
+          </div>
+          <div class="card-footer form-actions">
+            <button class="btn btn-primary" type="submit">Vereinsshop anlegen</button>
+            <a class="btn btn-ghost" href="/admin/clubs">Abbrechen</a>
+          </div>
+        </section>
+      <% } else { %>
+        <section class="card">
+          <div class="card-header"><h2>Texte im Shop</h2></div>
+          <div class="card-body">
+            <label class="field">
+              <span>Begrüßungstext (Startseite)</span>
+              <textarea name="intro_text" rows="6" placeholder="Hier findest du die offizielle Vereinskollektion …"><%= v('intro_text') %></textarea>
+              <span class="hint">Markdown möglich: **fett**, *kursiv*, - Liste, [Link](https://…)</span>
+            </label>
+            <label class="field">
+              <span>Hinweise beim Bestellen (Kasse)</span>
+              <textarea name="order_info" rows="4" placeholder="Bezahlung bei Abholung im Geschäft …"><%= v('order_info') %></textarea>
+              <span class="hint">Wird im Checkout über dem Bestellbutton angezeigt (z.B. Abholung, Zahlung, Lieferzeit, wer die Logodruckkosten trägt).</span>
+            </label>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-header"><h2>Ansprechpartner &amp; Bestellungen</h2></div>
+          <div class="card-body">
+            <div class="field-row">
+              <label class="field"><span>Ansprechpartner im Sporthaus</span><input name="contact_name" value="<%= v('contact_name') %>" placeholder="z.B. Eric Gärtner"></label>
+              <label class="field"><span>E-Mail</span><input type="email" name="contact_email" value="<%= v('contact_email') %>" class="<%= inv('contact_email') %>"><%- fe('contact_email') %></label>
+              <label class="field"><span>Telefon</span><input name="contact_phone" value="<%= v('contact_phone') %>"></label>
+            </div>
+            <label class="checkbox">
+              <input type="checkbox" name="require_member_number" value="1" <%= Number(c.require_member_number) ? 'checked' : '' %>>
+              <span><strong>Mitgliedsnummer beim Bestellen verlangen</strong><br><span class="small muted">Sinnvoll, wenn der Verein Zuschüsse gibt oder Artikel bezahlt.</span></span>
+            </label>
+            <label class="checkbox">
+              <input type="checkbox" name="is_active" value="1" <%= Number(c.is_active) ? 'checked' : '' %>>
+              <span><strong>Shop aktiv</strong><br><span class="small muted">Deaktivierte Shops sind für Mitglieder nicht erreichbar.</span></span>
+            </label>
+          </div>
+          <div class="card-footer form-actions">
+            <button class="btn btn-primary" type="submit">Speichern</button>
+            <a class="btn btn-ghost" href="/admin/clubs">Abbrechen</a>
+          </div>
+        </section>
+      <% } %>
+    </div>
+
+    <aside class="stack product-side">
+      <section class="card">
+        <div class="card-header"><h3>Vorschau</h3><span class="small muted">Shop-Kopf</span></div>
+        <div class="card-body">
+          <div class="shop-preview" data-shop-preview
+               style="--pc: <%= v('color_primary') %>; --pt: <%= h.contrastText(v('color_primary')) %>; --ac: <%= v('color_accent') %>; --at: <%= h.contrastText(v('color_accent')) %>">
+            <div class="shop-preview-top <%= c.hero_image_path ? 'has-hero' : '' %>" data-preview-top style="<%= c.hero_image_path ? 'background-image: url(' + c.hero_image_path + ')' : '' %>">
+              <div class="club-logo" data-preview-logo>
+                <% if (c.logo_path) { %><img src="<%= c.logo_path %>" alt=""><% } else { %><span><%= (v('short_name') || v('name') || 'VfB').slice(0, 3) %></span><% } %>
+              </div>
+              <div>
+                <div class="shop-preview-name" data-preview-name><%= v('short_name') || v('name') || 'Vereinsname' %></div>
+                <div class="shop-preview-tagline" data-preview-tagline><%= v('tagline') || 'Vereinskollektion' %></div>
+              </div>
+            </div>
+            <div class="shop-preview-stripe"></div>
+            <div class="shop-preview-body">
+              <span class="shop-preview-btn">In den Warenkorb</span>
+              <span class="shop-preview-badge">Neu</span>
+              <span class="shop-preview-card">Trainingsjacke <strong>26,99 €</strong></span>
+            </div>
+          </div>
+          <p class="hint" style="margin-top:10px">Zeigt Farben, Logo und Slogan, wie sie im Shop erscheinen.</p>
+        </div>
+      </section>
+
+      <% if (!isNew) { %>
+        <section class="card">
+          <div class="card-header"><h3>Shop-Link</h3></div>
+          <div class="card-body">
+            <div class="club-url"><code>/<%= c.slug %></code><button class="btn btn-sm btn-ghost" type="button" data-copy="/<%= c.slug %>">Kopieren</button></div>
+            <% if (c.domain) { %><p class="small" style="margin-top:8px">Eigene Domain: <a href="https://<%= c.domain %>" target="_blank" rel="noopener"><%= c.domain %></a></p><% } %>
+          </div>
+        </section>
+      <% } %>
+    </aside>
+  </div>
+</form>
+
+<% if (!isNew) { %>
+  <section class="card" id="loeschen" style="margin-top:24px">
+    <div class="card-header"><h2>Shop deaktivieren oder löschen</h2></div>
+    <div class="card-body">
+      <div class="row">
+        <form method="post" action="/admin/clubs/<%= c.id %>/toggle" class="inline">
+          <input type="hidden" name="back" value="edit">
+          <button class="btn" type="submit"><%= Number(c.is_active) ? 'Shop deaktivieren' : 'Shop aktivieren' %></button>
+        </form>
+        <span class="small muted">Deaktivieren blendet den Shop aus, Sortiment und Bestellungen bleiben erhalten.</span>
+      </div>
+      <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
+      <% if (stats.orders) { %>
+        <p class="small muted">Löschen ist nicht möglich, weil zu diesem Verein bereits <%= stats.orders %> Bestellung(en) existieren. Bitte stattdessen deaktivieren.</p>
+      <% } else { %>
+        <form method="post" action="/admin/clubs/<%= c.id %>/delete" class="row" data-confirm="Verein mit Sortiment und Seiten endgültig löschen?">
+          <input name="confirm_slug" placeholder="<%= c.slug %>" style="max-width:240px" aria-label="Shop-Adresse zur Bestätigung">
+          <button class="btn btn-danger" type="submit">Endgültig löschen</button>
+          <span class="small muted">Zur Bestätigung die Shop-Adresse <code><%= c.slug %></code> eingeben. Löscht auch alle Artikel und Seiten.</span>
+        </form>
+      <% } %>
+    </div>
+  </section>
+<% } %>
+
+<script src="/static/js/admin-clubs.js"></script>
+<%- include('../partials/foot') %>

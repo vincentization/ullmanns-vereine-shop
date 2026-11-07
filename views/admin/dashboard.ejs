@@ -1,0 +1,133 @@
+<%- include('partials/head', { title, active }) %>
+<link rel="stylesheet" href="/static/css/admin-orders.css">
+
+<div class="grid-4 dash-stats">
+  <a class="card stat stat-link" href="/admin/orders?status=new">
+    <div class="stat-value"><%= navCounts.newOrders %></div>
+    <div class="stat-label">Neue Bestellungen</div>
+  </a>
+  <a class="card stat stat-link" href="/admin/orders?status=question">
+    <div class="stat-value"><%= navCounts.openQuestions %></div>
+    <div class="stat-label">Offene Rückfragen</div>
+  </a>
+  <a class="card stat stat-link <%= navCounts.unreadMessages ? 'stat-alert' : '' %>" href="#nachrichten">
+    <div class="stat-value"><%= navCounts.unreadMessages %></div>
+    <div class="stat-label">Ungelesene Kundenantworten</div>
+  </a>
+  <div class="card stat">
+    <div class="stat-value"><%= h.money(month.total) %></div>
+    <div class="stat-label">Bestellwert <%= monthLabel %> (<%= month.n %> Bestellungen)</div>
+    <div class="small muted stat-split">Mitglieder <%= h.money(month.member) %> · Vereine <%= h.money(month.club) %></div>
+  </div>
+</div>
+
+<div class="row dash-hints">
+  <% if (productionCount) { %><a class="pill" href="/admin/orders?status=accepted"><%= productionCount %> angenommen / im Druck</a><% } %>
+  <% if (readyCount) { %><a class="pill" href="/admin/orders?status=ready"><%= readyCount %> abholbereit</a><% } %>
+</div>
+
+<div class="card dash-section">
+  <div class="card-header">
+    <h2>Vereinsshops</h2>
+    <a class="btn btn-sm" href="/admin/clubs/new">+ Neuer Verein</a>
+  </div>
+  <% if (!clubs.length) { %>
+    <div class="empty">Noch keine Vereine angelegt. <a href="/admin/clubs/new">Jetzt ersten Vereinsshop anlegen</a>.</div>
+  <% } else { %>
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Verein</th>
+          <th class="num">Aktive Artikel</th>
+          <th class="num">Offen</th>
+          <th class="num">In Arbeit</th>
+          <th class="num">Bestellungen <%= monthLabel.split(' ')[0] %></th>
+          <th class="num">Umsatz Monat</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+      <% clubs.forEach(function (c) { %>
+        <tr class="<%= c.is_active ? '' : 'is-muted' %>">
+          <td>
+            <span class="swatch" style="background: <%= c.color_primary %>"></span>
+            <strong><%= c.name %></strong>
+            <% if (!c.is_active) { %> <span class="badge badge-gray">inaktiv</span><% } %>
+            <div class="small muted">/<%= c.slug %></div>
+          </td>
+          <td class="num"><%= c.active_products %></td>
+          <td class="num"><% if (c.open_orders) { %><a href="/admin/orders?status=open&club=<%= c.id %>"><span class="badge badge-blue"><%= c.open_orders %></span></a><% } else { %>0<% } %></td>
+          <td class="num"><%= c.running_orders %></td>
+          <td class="num"><%= c.month_orders %></td>
+          <td class="num"><%= h.money(c.month_total) %></td>
+          <td class="num">
+            <div class="actions" style="justify-content: flex-end">
+              <a class="btn btn-sm btn-ghost" href="/<%= c.slug %>" target="_blank" rel="noopener">Shop ↗</a>
+              <a class="btn btn-sm btn-ghost" href="/admin/products?club=<%= c.id %>">Sortiment</a>
+              <a class="btn btn-sm" href="/admin/orders?status=all&club=<%= c.id %>">Bestellungen</a>
+            </div>
+          </td>
+        </tr>
+      <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <% } %>
+</div>
+
+<div class="grid-main-side dash-section">
+  <div class="card">
+    <div class="card-header">
+      <h2>Letzte Bestellungen</h2>
+      <a class="btn btn-sm btn-ghost" href="/admin/orders?status=all">Alle anzeigen</a>
+    </div>
+    <% if (!recentOrders.length) { %>
+      <div class="empty">Noch keine Bestellungen eingegangen.</div>
+    <% } else { %>
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>Nr.</th><th>Datum</th><th>Verein</th><th>Besteller</th><th class="num">Betrag</th><th>Status</th></tr></thead>
+        <tbody>
+        <% recentOrders.forEach(function (o) { %>
+          <tr class="<%= o.status === 'new' ? 'is-highlight' : '' %>">
+            <td class="nowrap"><a href="/admin/orders/<%= o.id %>" class="mono"><%= o.order_number %></a><% if (o.unread) { %> <span class="unread-dot" title="Ungelesene Kundennachricht">✉</span><% } %></td>
+            <td class="small nowrap"><%= h.date(o.created_at) %></td>
+            <td class="nowrap"><span class="swatch" style="background: <%= o.color_primary %>"></span> <%= o.club_short || o.club_name %></td>
+            <td><%= o.first_name %> <%= o.last_name %></td>
+            <td class="num"><%= h.money(o.total_cents) %></td>
+            <td><span class="badge badge-<%= h.statusTone(o.status) %>"><%= h.statusLabel(o.status) %></span></td>
+          </tr>
+        <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% } %>
+  </div>
+
+  <div class="card" id="nachrichten">
+    <div class="card-header"><h2>Kundennachrichten</h2></div>
+    <% if (!recentMessages.length) { %>
+      <div class="empty">Keine Nachrichten von Bestellern.</div>
+    <% } else { %>
+    <ul class="msg-feed">
+      <% recentMessages.forEach(function (m) { %>
+        <li class="<%= m.read_by_shop ? '' : 'is-unread' %>">
+          <a href="/admin/orders/<%= m.order_id %>#nachrichten">
+            <div class="row">
+              <strong><%= m.first_name %> <%= m.last_name %></strong>
+              <% if (!m.read_by_shop) { %><span class="badge badge-amber">neu</span><% } %>
+              <span class="spacer"></span>
+              <span class="small muted"><%= h.dateTime(m.created_at) %></span>
+            </div>
+            <div class="small muted"><span class="mono"><%= m.order_number %></span> · <%= m.club_short || m.club_name %></div>
+            <div class="msg-feed-text"><%= h.truncate(m.body, 140) %></div>
+          </a>
+        </li>
+      <% }) %>
+    </ul>
+    <% } %>
+  </div>
+</div>
+
+<%- include('partials/foot') %>

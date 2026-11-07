@@ -1,0 +1,31 @@
+<%- include('partials/landing-head', { title: title }) %>
+<main class="container landing-main" id="inhalt">
+  <section class="landing-intro">
+    <h1>Vereinskollektionen</h1>
+    <p>Wähle deinen Verein, stelle deine Vereinskleidung zusammen und hole sie bedruckt im <%= settings.store_name %> ab.</p>
+  </section>
+  <% if (!clubs.length) { %>
+    <div class="empty-state"><p>Aktuell sind noch keine Vereinsshops freigeschaltet.</p></div>
+  <% } else { %>
+    <ul class="club-tiles">
+      <% clubs.forEach(function (c) { %>
+        <li>
+          <a class="club-tile" href="/<%= c.slug %>" style="--club-primary: <%= c.color_primary %>; --club-on-primary: <%= c.onPrimary %>; --club-accent: <%= c.color_accent %>">
+            <span class="club-tile-band">
+              <% if (c.logo_path) { %><img src="<%= c.logo_path %>" alt="" width="96" height="96"><% } else { %><span class="club-logo-fallback big"><%= (c.short_name || c.name).split(/\s+/).map(function (w) { return w[0]; }).join('').slice(0, 3) %></span><% } %>
+            </span>
+            <span class="club-tile-body">
+              <strong><%= c.name %></strong>
+              <% if (c.tagline) { %><span class="muted"><%= c.tagline %></span><% } %>
+              <span class="small"><%= c.productCount %> Artikel · Zum Shop →</span>
+            </span>
+          </a>
+        </li>
+      <% }) %>
+    </ul>
+  <% } %>
+  <section class="landing-club-cta card">
+    <h2>Ihr Verein möchte auch einen eigenen Shop?</h2>
+    <p>Wir stellen mit Ihnen eine Kollektion mit Vereinslogo und -farben zusammen, kümmern uns um Druck und Beflockung und Ihre Mitglieder bestellen bequem online. Sprechen Sie uns an: <% if (settings.store_email) { %><a href="mailto:<%= settings.store_email %>"><%= settings.store_email %></a><% } %></p>
+  </section>
+<%- include('partials/landing-foot') %>

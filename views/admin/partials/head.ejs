@@ -1,0 +1,57 @@
+<%#
+  Backend-Layout (Kopf). Aufruf:  include('<rel>/partials/head', { title: '...', active: 'orders' })
+  active: dashboard | orders | clubs | products | pages | users | settings
+%>
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title><%= title %> – Backend <%= settings.store_name %></title>
+  <link rel="stylesheet" href="/static/css/admin.css">
+  <link rel="icon" href="/static/img/store-logo.svg">
+</head>
+<body class="admin">
+<div class="admin-shell">
+  <aside class="admin-sidebar" id="admin-sidebar">
+    <a class="admin-brand" href="/admin">
+      <img src="/static/img/store-logo.svg" alt="" width="40" height="40">
+      <span><strong><%= settings.store_name %></strong><small>Vereinsshops</small></span>
+    </a>
+    <% const a = typeof active !== 'undefined' ? active : ''; %>
+    <nav class="admin-nav">
+      <a href="/admin" class="<%= a === 'dashboard' ? 'active' : '' %>">Übersicht</a>
+      <a href="/admin/orders" class="<%= a === 'orders' ? 'active' : '' %>">Bestellungen
+        <% if (navCounts.newOrders) { %><span class="nav-badge" title="Neue Bestellungen"><%= navCounts.newOrders %></span><% } %>
+        <% if (navCounts.unreadMessages) { %><span class="nav-badge nav-badge-amber" title="Ungelesene Antworten"><%= navCounts.unreadMessages %></span><% } %>
+      </a>
+      <a href="/admin/clubs" class="<%= a === 'clubs' ? 'active' : '' %>">Vereine &amp; Shops</a>
+      <a href="/admin/products" class="<%= a === 'products' ? 'active' : '' %>">Sortiment</a>
+      <a href="/admin/pages" class="<%= a === 'pages' ? 'active' : '' %>">Seiten</a>
+      <div class="admin-nav-sep">System</div>
+      <a href="/admin/users" class="<%= a === 'users' ? 'active' : '' %>">Benutzer</a>
+      <a href="/admin/settings" class="<%= a === 'settings' ? 'active' : '' %>">Einstellungen</a>
+    </nav>
+    <% if (allClubs.length) { %>
+    <div class="admin-nav-sep">Shops ansehen</div>
+    <nav class="admin-nav admin-nav-clubs">
+      <% allClubs.forEach(function (c) { %>
+        <a href="/<%= c.slug %>" target="_blank" rel="noopener"><span class="dot" style="background: <%= c.color_primary %>"></span><%= c.short_name || c.name %><% if (!c.is_active) { %> <small>(inaktiv)</small><% } %></a>
+      <% }) %>
+    </nav>
+    <% } %>
+    <form method="post" action="/admin/logout" class="admin-logout">
+      <span>Angemeldet als <strong><%= currentUser.display_name || currentUser.username %></strong></span>
+      <button class="btn btn-sm btn-ghost" type="submit">Abmelden</button>
+    </form>
+  </aside>
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <button class="btn btn-ghost btn-sm admin-menu-toggle" type="button" onclick="document.getElementById('admin-sidebar').classList.toggle('open')" aria-label="Menü">☰ Menü</button>
+      <h1 class="admin-title"><%= title %></h1>
+    </header>
+    <main class="admin-content">
+      <% getFlashes().forEach(function (f) { %>
+        <div class="alert alert-<%= f.type === 'error' ? 'error' : f.type === 'info' ? 'info' : 'success' %>"><%= f.message %></div>
+      <% }) %>

@@ -1,0 +1,268 @@
+<%- include('../partials/head', { title, active }) %>
+<link rel="stylesheet" href="/static/css/admin-orders.css">
+<% const club = order.club; const showClub = order.club_total_cents > 0; %>
+
+<div class="page-header">
+  <div class="order-head">
+    <a class="small" href="/admin/orders">← Alle Bestellungen</a>
+    <h2>
+      <span class="mono"><%= order.order_number %></span>
+      <span class="badge badge-<%= h.statusTone(order.status) %> badge-lg"><%= status.label %></span>
+    </h2>
+    <div class="muted">
+      Eingegangen am <%= h.dateTime(order.created_at) %> ·
+      <span class="swatch" style="background: <%= club.color_primary %>"></span>
+      <a href="/admin/orders?status=all&club=<%= club.id %>"><%= club.name %></a>
+      <% if (order.status_changed_at !== order.created_at) { %> · Status seit <%= h.dateTime(order.status_changed_at) %><% } %>
+    </div>
+  </div>
+  <div class="actions">
+    <a class="btn" href="/admin/orders/<%= order.id %>/print" target="_blank" rel="noopener">🖨 Bestellschein</a>
+    <a class="btn" href="<%= link %>" target="_blank" rel="noopener">Kundenansicht ↗</a>
+  </div>
+</div>
+
+<div class="grid-main-side">
+  <div class="stack">
+
+    <% if (order.status === 'rejected' && order.reject_reason) { %>
+      <div class="alert alert-error"><strong>Abgelehnt:</strong> <%= order.reject_reason %></div>
+    <% } %>
+
+    <!-- Aktionen -->
+    <div class="card">
+      <div class="card-header">
+        <h3>Bearbeitung</h3>
+        <% const staffHints = { new: 'Bestellung prüfen: annehmen, Rückfrage stellen oder ablehnen.', question: 'Wartet auf Antwort des Bestellers.', accepted: 'Zum Druck geben, sobald die Sammelbestellung rausgeht.', in_production: 'Beim Druckdienstleister. Nach Eingang auf „Abholbereit“ setzen.', ready: 'Liegt zur Abholung bereit. Bei Abholung und Zahlung abschließen.', completed: 'Abgeschlossen.', rejected: 'Abgelehnt. Kann wieder geöffnet werden.', cancelled: 'Storniert. Kann wieder geöffnet werden.' }; %>
+        <span class="small muted"><%= staffHints[order.status] || '' %></span>
+      </div>
+      <div class="card-body">
+        <% if (!nextActions.length) { %>
+          <p class="muted">Diese Bestellung ist abgeschlossen. Keine weiteren Statuswechsel möglich.</p>
+        <% } else { %>
+          <div class="action-row">
+            <% nextActions.filter(function (a) { return a.status !== 'question' && a.status !== 'rejected'; }).forEach(function (a) { %>
+              <form method="post" action="/admin/orders/<%= order.id %>/status" class="inline"
+                    <% if (a.status === 'cancelled') { %>data-confirm="Bestellung <%= order.order_number %> wirklich stornieren?"<% } %>>
+                <input type="hidden" name="to" value="<%= a.status %>">
+                <button class="btn <%= a.style %>" type="submit"><%= a.label %></button>
+              </form>
+            <% }) %>
+            <% if (nextActions.some(function (a) { return a.status === 'question'; })) { %>
+              <button class="btn btn-secondary" type="button" data-toggle="panel-question">Rückfrage stellen …</button>
+            <% } %>
+            <% if (nextActions.some(function (a) { return a.status === 'rejected'; })) { %>
+              <button class="btn btn-danger" type="button" data-toggle="panel-reject">Ablehnen …</button>
+            <% } %>
+          </div>
+
+          <% if (nextActions.some(function (a) { return a.status === 'question'; })) { %>
+          <form method="post" action="/admin/orders/<%= order.id %>/status" class="action-panel" id="panel-question" hidden>
+            <input type="hidden" name="to" value="question">
+            <label class="field">
+              <span>Rückfrage an <%= order.first_name %> <%= order.last_name %></span>
+              <textarea name="message" required placeholder="z.B. Die Größe 164 ist für diesen Artikel aktuell nicht lieferbar – möchtest du stattdessen XS?"></textarea>
+              <span class="hint">Der Status wechselt auf „Rückfrage“. Der Besteller sieht die Frage über seinen Bestell-Link und kann dort antworten.</span>
+            </label>
+            <div class="form-actions">
+              <button class="btn btn-secondary" type="submit">Rückfrage senden</button>
+              <button class="btn btn-ghost" type="button" data-toggle="panel-question">Abbrechen</button>
+            </div>
+          </form>
+          <% } %>
+
+          <% if (nextActions.some(function (a) { return a.status === 'rejected'; })) { %>
+          <form method="post" action="/admin/orders/<%= order.id %>/status" class="action-panel" id="panel-reject" hidden
+                data-confirm="Bestellung <%= order.order_number %> wirklich ablehnen?">
+            <input type="hidden" name="to" value="rejected">
+            <label class="field">
+              <span>Begründung (Pflicht, wird dem Besteller angezeigt)</span>
+              <textarea name="message" required placeholder="z.B. Dieser Artikel ist nur für Mitglieder der Fußballabteilung bestellbar."></textarea>
+            </label>
+            <div class="form-actions">
+              <button class="btn btn-danger" type="submit">Bestellung ablehnen</button>
+              <button class="btn btn-ghost" type="button" data-toggle="panel-reject">Abbrechen</button>
+            </div>
+          </form>
+          <% } %>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Positionen -->
+    <div class="card">
+      <div class="card-header">
+        <h3>Positionen</h3>
+        <span class="muted small"><%= totals.qty %> Stück</span>
+      </div>
+      <div class="table-wrap">
+        <table class="table items-table">
+          <thead>
+            <tr>
+              <th>Artikel</th>
+              <th class="num">Menge</th>
+              <th class="num col-unit">Einzelpreis</th>
+              <th class="num">Mitglied</th>
+              <% if (showClub) { %><th class="num">Verein</th><% } %>
+            </tr>
+          </thead>
+          <tbody>
+          <% order.items.forEach(function (i) { %>
+            <tr>
+              <td>
+                <% if (i.product_id) { %><a href="/admin/products/<%= i.product_id %>/edit"><strong><%= i.product_name %></strong></a><% } else { %><strong><%= i.product_name %></strong><% } %>
+                <div class="small muted"><%= [i.brand, i.sku ? 'Art.-Nr. ' + i.sku : ''].filter(Boolean).join(' · ') %></div>
+                <div class="item-pills">
+                  <% if (i.variant) { %><span class="pill"><%= i.variant %></span><% } %>
+                  <% if (i.color) { %><span class="pill">Farbe: <%= i.color %></span><% } %>
+                  <% if (i.size) { %><span class="pill pill-strong">Gr. <%= i.size %></span><% } %>
+                </div>
+                <% if (i.print_details.length) { %>
+                  <ul class="print-list">
+                    <% i.print_details.forEach(function (p) { %>
+                      <li><span class="muted"><%= p.label %>:</span> <strong class="print-value"><%= p.value %></strong> <span class="small muted">(+<%= h.money(p.price_cents) %>)</span></li>
+                    <% }) %>
+                  </ul>
+                <% } %>
+              </td>
+              <td class="num"><strong><%= i.quantity %></strong></td>
+              <td class="num col-unit">
+                <%= h.money(i.unit_price_cents) %>
+                <% if (i.print_price_cents) { %><div class="small muted">+ Druck <%= h.money(i.print_price_cents) %></div><% } %>
+              </td>
+              <td class="num">
+                <%= h.money(i.line_member_cents) %>
+                <% if (i.quantity > 1) { %><div class="small muted"><%= i.quantity %> × <%= h.money(i.member_unit_cents) %></div><% } %>
+              </td>
+              <% if (showClub) { %>
+              <td class="num">
+                <%= i.line_club_cents ? h.money(i.line_club_cents) : '–' %>
+                <% if (i.funding_mode === 'subsidy') { %><div class="small muted">Zuschuss</div><% } else if (i.funding_mode === 'club_article') { %><div class="small muted">Artikel zahlt Verein</div><% } %>
+              </td>
+              <% } %>
+            </tr>
+          <% }) %>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="2">Summe</td><td class="col-unit"></td>
+              <td class="num"><%= h.money(order.member_total_cents) %></td>
+              <% if (showClub) { %><td class="num"><%= h.money(order.club_total_cents) %></td><% } %>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <div class="card-footer totals-footer">
+        <div><span class="muted">Mitglied zahlt im Geschäft</span><strong class="total-big"><%= h.money(order.member_total_cents) %></strong></div>
+        <% if (order.club_total_cents) { %><div><span class="muted">Wird dem Verein berechnet</span><strong class="total-big"><%= h.money(order.club_total_cents) %></strong></div><% } %>
+        <div><span class="muted">Gesamtwert</span><strong><%= h.money(order.total_cents) %></strong></div>
+      </div>
+    </div>
+
+    <!-- Nachrichten -->
+    <div class="card" id="nachrichten">
+      <div class="card-header">
+        <h3>Nachrichten mit dem Besteller</h3>
+        <span class="small muted"><%= order.messages.length %> Nachricht<%= order.messages.length === 1 ? '' : 'en' %></span>
+      </div>
+      <div class="card-body">
+        <% if (order.customer_note) { %>
+          <div class="chat-msg chat-customer">
+            <div class="chat-meta"><strong><%= order.first_name %> <%= order.last_name %></strong> · Anmerkung bei Bestellung · <%= h.dateTime(order.created_at) %></div>
+            <div class="chat-bubble"><%= order.customer_note %></div>
+          </div>
+        <% } %>
+        <% if (!order.messages.length && !order.customer_note) { %>
+          <p class="muted">Noch keine Nachrichten. Rückfragen erscheinen beim Besteller auf seiner Bestellseite.</p>
+        <% } %>
+        <% order.messages.forEach(function (m) { %>
+          <div class="chat-msg <%= m.sender === 'shop' ? 'chat-shop' : 'chat-customer' %>">
+            <div class="chat-meta">
+              <strong><%= m.sender === 'shop' ? (m.author || settings.store_name) : (m.author || (order.first_name + ' ' + order.last_name)) %></strong>
+              · <%= h.dateTime(m.created_at) %>
+              <% if (unreadIds.has(m.id)) { %><span class="badge badge-amber">neu</span><% } %>
+              <% if (m.sender === 'shop') { %><span class="small muted"><%= m.read_by_customer ? '· gelesen' : '· noch nicht gelesen' %></span><% } %>
+            </div>
+            <div class="chat-bubble"><%= m.body %></div>
+          </div>
+        <% }) %>
+
+        <form method="post" action="/admin/orders/<%= order.id %>/message" class="chat-form">
+          <label class="field">
+            <span>Nachricht an <%= order.first_name %></span>
+            <textarea name="body" required placeholder="Nachricht schreiben …"></textarea>
+          </label>
+          <div class="form-actions">
+            <% if (order.status !== 'question' && status.next.includes('question')) { %>
+              <label class="checkbox"><input type="checkbox" name="set_question" value="1"> Als Rückfrage markieren (Status → „Rückfrage“)</label>
+              <span class="spacer"></span>
+            <% } %>
+            <button class="btn btn-primary" type="submit">Nachricht speichern</button>
+          </div>
+          <p class="hint">Hinweis: Nachrichten werden noch nicht automatisch per E-Mail verschickt. Nutze ggf. „E-Mail an Besteller“ rechts, um auf die neue Nachricht hinzuweisen.</p>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Seitenleiste -->
+  <div class="stack">
+    <div class="card">
+      <div class="card-header"><h3>Besteller</h3></div>
+      <div class="card-body">
+        <p class="customer-name"><strong><%= order.first_name %> <%= order.last_name %></strong></p>
+        <dl class="kv">
+          <dt>E-Mail</dt><dd><a href="mailto:<%= order.email %>"><%= order.email %></a></dd>
+          <% if (order.phone) { %><dt>Telefon</dt><dd><a href="tel:<%= order.phone.replace(/[^+\d]/g, '') %>"><%= order.phone %></a></dd><% } %>
+          <% if (order.member_number) { %><dt>Mitgliedsnr.</dt><dd><%= order.member_number %></dd><% } %>
+          <dt>Mannschaft</dt><dd><%= order.team || '–' %></dd>
+        </dl>
+        <% if (otherOrders.length) { %>
+          <div class="small muted other-orders-title">Weitere Bestellungen dieser E-Mail:</div>
+          <ul class="other-orders">
+            <% otherOrders.forEach(function (o) { %>
+              <li><a class="mono" href="/admin/orders/<%= o.id %>"><%= o.order_number %></a> <span class="badge badge-<%= h.statusTone(o.status) %>"><%= h.statusLabel(o.status) %></span> <span class="small muted"><%= h.date(o.created_at) %></span></li>
+            <% }) %>
+          </ul>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3>Link für den Besteller</h3></div>
+      <div class="card-body">
+        <p class="small muted">Über diesen Link sieht der Besteller Status und Nachrichten und kann auf Rückfragen antworten.</p>
+        <input type="text" readonly value="<%= fullLink %>" class="mono small link-input" onclick="this.select()">
+        <div class="actions link-actions">
+          <button class="btn btn-sm" type="button" data-copy="<%= link %>">Link kopieren</button>
+          <a class="btn btn-sm" href="<%= link %>" target="_blank" rel="noopener">Öffnen ↗</a>
+          <a class="btn btn-sm btn-secondary" href="<%= mailto %>">✉ E-Mail an Besteller</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3>Interne Notiz</h3></div>
+      <form class="card-body" method="post" action="/admin/orders/<%= order.id %>/note">
+        <textarea name="internal_note" placeholder="Nur im Backend sichtbar, z.B. „Beflockung bei Textildruck Müller beauftragt am …“"><%= order.internal_note || '' %></textarea>
+        <div class="form-actions"><button class="btn btn-sm" type="submit">Notiz speichern</button></div>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3>Verlauf</h3></div>
+      <ol class="timeline">
+        <% order.events.slice().reverse().forEach(function (e) { %>
+          <li>
+            <span class="badge badge-<%= h.statusTone(e.to_status) %>"><%= h.statusLabel(e.to_status) %></span>
+            <div class="small muted"><%= h.dateTime(e.created_at) %><%= e.user_name ? ' · ' + e.user_name : (e.from_status ? '' : ' · Besteller') %></div>
+            <% if (e.note) { %><div class="small"><%= e.note %></div><% } %>
+          </li>
+        <% }) %>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<script src="/static/js/admin-orders.js"></script>
+<%- include('../partials/foot') %>

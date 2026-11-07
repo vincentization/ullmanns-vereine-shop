@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Druckliste – <%= club ? (club.short_name || club.name) : 'alle Vereine' %></title>
+  <link rel="stylesheet" href="/static/css/admin-orders.css">
+</head>
+<body class="print-doc">
+  <div class="print-toolbar no-print">
+    <a href="/admin/orders?status=<%= tab.key %><%= club ? '&club=' + club.id : '' %>">← Zurück zu den Bestellungen</a>
+    <form method="get" action="/admin/orders/production" class="toolbar-filter">
+      <% if (!ids.length) { %>
+      <select name="status" onchange="this.form.submit()">
+        <% [['accepted', 'Angenommen'], ['in_production', 'Im Druck'], ['open', 'Offen'], ['ready', 'Abholbereit'], ['all', 'Alle']].forEach(function (s) { %>
+          <option value="<%= s[0] %>" <%= tab.key === s[0] ? 'selected' : '' %>><%= s[1] %></option>
+        <% }) %>
+      </select>
+      <select name="club" onchange="this.form.submit()">
+        <option value="">Alle Vereine</option>
+        <% allClubs.forEach(function (c) { %><option value="<%= c.id %>" <%= club && club.id === c.id ? 'selected' : '' %>><%= c.short_name || c.name %></option><% }) %>
+      </select>
+      <% } %>
+    </form>
+    <button type="button" onclick="window.print()">🖨 Drucken</button>
+  </div>
+
+  <div class="sheet sheet-wide">
+    <header class="sheet-head">
+      <div class="sheet-store">
+        <img src="/static/img/store-logo.svg" alt="" width="48" height="48">
+        <div><strong><%= settings.store_name %></strong><br>Druckauftrag / Sammelliste</div>
+      </div>
+      <div class="sheet-club">
+        <% if (club && club.logo_path) { %><img src="<%= club.logo_path %>" alt="" class="sheet-club-logo"><% } %>
+        <div>
+          <strong><%= club ? club.name : 'Alle Vereine' %></strong><br>
+          <span class="muted"><%= ids.length ? 'Ausgewählte Bestellungen' : 'Status: ' + tab.label %> · Stand <%= generatedAt %></span>
+        </div>
+      </div>
+    </header>
+
+    <h1 class="sheet-title">Druckliste – <%= totalQty %> Stück aus <%= orderNumbers.length %> Bestellung<%= orderNumbers.length === 1 ? '' : 'en' %></h1>
+    <% if (orderNumbers.length) { %><p class="small muted">Bestellungen: <%= orderNumbers.join(', ') %></p><% } %>
+
+    <% if (!groups.length) { %>
+      <p class="empty">Keine Positionen für diese Auswahl.</p>
+    <% } %>
+
+    <% groups.forEach(function (g) { %>
+    <section class="prod-group">
+      <h2>
+        <%= g.product_name %><% if (g.variant) { %> – <%= g.variant %><% } %>
+        <span class="prod-total"><%= g.totalQty %> Stück<% if (g.printQty) { %> · davon <%= g.printQty %> mit Sonderdruck<% } %></span>
+      </h2>
+      <div class="small muted"><%= [g.brand, g.sku ? 'Art.-Nr. ' + g.sku : ''].filter(Boolean).join(' · ') %></div>
+
+      <div class="matrix">
+        <% g.matrix.forEach(function (m) { %>
+          <span class="matrix-cell"><span class="muted"><%= m.color %> · </span><strong><%= m.size %></strong>: <%= m.qty %>×</span>
+        <% }) %>
+      </div>
+
+      <table class="sheet-table">
+        <thead>
+          <tr><th class="chk">✓</th><th>Farbe</th><th>Größe</th><th class="num">Menge</th><th>Sonderdruck (je Stück)</th><th>Bestellung</th><th>Besteller / Mannschaft</th></tr>
+        </thead>
+        <tbody>
+        <% g.rows.forEach(function (r) { %>
+          <tr>
+            <td class="chk"><span class="box"></span></td>
+            <td><%= r.color || '–' %></td>
+            <td><strong><%= r.size || '–' %></strong></td>
+            <td class="num"><strong><%= r.quantity %></strong></td>
+            <td>
+              <% if (r.print_details.length) { %>
+                <% r.print_details.forEach(function (p) { %><div><span class="small"><%= p.label %>:</span> <strong class="print-value"><%= p.value %></strong></div><% }) %>
+              <% } else { %><span class="muted">–</span><% } %>
+            </td>
+            <td class="mono small"><%= r.order_number %></td>
+            <td><%= r.first_name %> <%= r.last_name %><% if (r.team) { %><div class="small muted"><%= r.team %></div><% } %></td>
+          </tr>
+        <% }) %>
+        </tbody>
+      </table>
+    </section>
+    <% }) %>
+  </div>
+</body>
+</html>
