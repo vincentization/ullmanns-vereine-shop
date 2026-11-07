@@ -25,7 +25,7 @@ function discardUploads(req) {
   ['logo', 'hero_image'].forEach((f) => removeUpload(fileUrl(req, f)));
 }
 
-/** Präfix für Bestellnummern aus Kurzname/Name, z.B. "VfB Hellerau" -> "VFB" */
+/** Präfix für Bestellnummern aus Kurzname/Name, z.B. "VsB Mellernau" -> "VSB" */
 function derivePrefix(text) {
   const first = String(text || '').split(/\s+/)[0] || '';
   const p = first.toUpperCase().replace(/Ä/g, 'AE').replace(/Ö/g, 'OE').replace(/Ü/g, 'UE').replace(/[^A-Z0-9]/g, '').slice(0, 6);
@@ -126,7 +126,7 @@ function parseClubForm(body, { isNew, clubId = null }) {
   else if (RESERVED_SLUGS.includes(values.slug)) errors.slug = `"${values.slug}" ist reserviert. Bitte eine andere Adresse wählen.`;
   else if (get('SELECT id FROM clubs WHERE slug = ? AND id IS NOT ?', values.slug, clubId)) errors.slug = 'Diese Shop-Adresse ist bereits vergeben.';
   if (!values.order_prefix) values.order_prefix = derivePrefix(values.short_name || values.name);
-  if (!/^[A-Z0-9]{2,8}$/.test(values.order_prefix)) errors.order_prefix = 'Präfix: 2–8 Großbuchstaben/Ziffern, z.B. VFB.';
+  if (!/^[A-Z0-9]{2,8}$/.test(values.order_prefix)) errors.order_prefix = 'Präfix: 2–8 Großbuchstaben/Ziffern, z.B. VSB.';
   else if (get('SELECT id FROM clubs WHERE order_prefix = ? AND id IS NOT ?', values.order_prefix, clubId)) errors.order_prefix = 'Dieses Präfix nutzt bereits ein anderer Verein.';
   for (const k of ['color_primary', 'color_secondary', 'color_accent']) {
     if (!h.isHexColor(values[k])) errors[k] = 'Ungültige Farbe (Format #rrggbb).';

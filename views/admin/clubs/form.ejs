@@ -47,19 +47,19 @@
         <div class="card-body">
           <label class="field">
             <span>Vollständiger Vereinsname *</span>
-            <input name="name" value="<%= v('name') %>" class="<%= inv('name') %>" placeholder="z.B. VfB Hellerau-Klotzsche e.V." required data-club-name <%= isNew ? 'autofocus' : '' %>>
+            <input name="name" value="<%= v('name') %>" class="<%= inv('name') %>" placeholder="z.B. VsB Mellernau e.V." required data-club-name <%= isNew ? 'autofocus' : '' %>>
             <%- fe('name') %>
           </label>
           <div class="field-row">
             <label class="field">
               <span>Kurzname</span>
-              <input name="short_name" value="<%= v('short_name') %>" placeholder="z.B. VfB Hellerau" data-club-short>
+              <input name="short_name" value="<%= v('short_name') %>" placeholder="z.B. VsB Mellernau" data-club-short>
               <span class="hint">Für Navigation und Überschriften.</span>
             </label>
             <label class="field">
               <span>Bestellnummer-Präfix</span>
-              <input name="order_prefix" value="<%= v('order_prefix') %>" class="mono <%= inv('order_prefix') %>" placeholder="VFB" maxlength="8" data-club-prefix style="text-transform: uppercase">
-              <span class="hint">Bestellungen heißen dann z.B. <span class="mono" data-prefix-example><%= v('order_prefix') || 'VFB' %></span>-2026-0001</span>
+              <input name="order_prefix" value="<%= v('order_prefix') %>" class="mono <%= inv('order_prefix') %>" placeholder="VSB" maxlength="8" data-club-prefix style="text-transform: uppercase">
+              <span class="hint">Bestellungen heißen dann z.B. <span class="mono" data-prefix-example><%= v('order_prefix') || 'VSB' %></span>-2026-0001</span>
               <%- fe('order_prefix') %>
             </label>
           </div>
@@ -67,7 +67,7 @@
             <span>Shop-Adresse *</span>
             <span class="slug-field">
               <span class="slug-prefix" data-origin>/</span>
-              <input name="slug" value="<%= v('slug') %>" class="mono <%= inv('slug') %>" placeholder="vfb-hellerau" data-club-slug <%= v('slug') ? 'data-touched="1"' : '' %>>
+              <input name="slug" value="<%= v('slug') %>" class="mono <%= inv('slug') %>" placeholder="vsb-mellernau" data-club-slug <%= v('slug') ? 'data-touched="1"' : '' %>>
             </span>
             <span class="hint">Nur Kleinbuchstaben, Ziffern und Bindestriche. <%= isNew ? 'Wird automatisch aus dem Namen erzeugt.' : 'Achtung: Bei Änderung funktionieren bereits verschickte Links nicht mehr.' %></span>
             <%- fe('slug') %>
@@ -75,14 +75,14 @@
           <% if (!isNew) { %>
             <label class="field">
               <span>Eigene Domain (optional)</span>
-              <input name="domain" value="<%= v('domain') %>" class="<%= inv('domain') %>" placeholder="shop.vfb-hellerau.de">
+              <input name="domain" value="<%= v('domain') %>" class="<%= inv('domain') %>" placeholder="shop.vsb-mellernau.de">
               <span class="hint">Wenn der Verein eine eigene (Sub-)Domain auf diesen Server zeigen lässt, erscheint der Shop dort direkt unter „/“.</span>
               <%- fe('domain') %>
             </label>
           <% } %>
           <label class="field">
             <span>Slogan</span>
-            <input name="tagline" value="<%= v('tagline') %>" placeholder="z.B. Dein Verein im Dresdner Norden" data-club-tagline>
+            <input name="tagline" value="<%= v('tagline') %>" placeholder="z.B. Dein Verein vor Ort" data-club-tagline>
           </label>
         </div>
       </section>
@@ -200,7 +200,7 @@
                style="--pc: <%= v('color_primary') %>; --pt: <%= h.contrastText(v('color_primary')) %>; --ac: <%= v('color_accent') %>; --at: <%= h.contrastText(v('color_accent')) %>">
             <div class="shop-preview-top <%= c.hero_image_path ? 'has-hero' : '' %>" data-preview-top style="<%= c.hero_image_path ? 'background-image: url(' + c.hero_image_path + ')' : '' %>">
               <div class="club-logo" data-preview-logo>
-                <% if (c.logo_path) { %><img src="<%= c.logo_path %>" alt=""><% } else { %><span><%= (v('short_name') || v('name') || 'VfB').slice(0, 3) %></span><% } %>
+                <% if (c.logo_path) { %><img src="<%= c.logo_path %>" alt=""><% } else { %><span><%= (v('short_name') || v('name') || 'VsB').slice(0, 3) %></span><% } %>
               </div>
               <div>
                 <div class="shop-preview-name" data-preview-name><%= v('short_name') || v('name') || 'Vereinsname' %></div>

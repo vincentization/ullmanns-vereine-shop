@@ -7,7 +7,7 @@ src/
   server.js            Start (PORT, DATA_DIR, SESSION_SECRET, COOKIE_SECURE)
   app.js               Express-Setup, Sessions, Flash, statische Dateien, Router
   db.js                Schema + DB-Helfer (get/all/run/tx, Einstellungen)
-  seed.js              Beispieldaten (Sporthaus, Admin, VfB Hellerau mit 25 Artikeln, Demo-Bestellungen)
+  seed.js              Beispieldaten (Sporthaus, Admin, VsB Mellernau mit 25 Artikeln, Demo-Bestellungen)
   lib/
     pricing.js         Preislogik + Finanzierungsmodelle (member / subsidy / club_article), Warenkorb-Berechnung
     orders.js          Bestellung anlegen, Status ändern, Nachrichten, Bestellung laden
@@ -38,7 +38,7 @@ data/                  SQLite-Datei + Uploads (nicht im Git)
 | Bereich | URL |
 |---|---|
 | Übersicht aller Vereinsshops | `/` |
-| Vereinsshop | `/<slug>` (z.B. `/vfb-hellerau`), optional eigene Domain (`clubs.domain`) |
+| Vereinsshop | `/<slug>` (z.B. `/vsb-mellernau`), optional eigene Domain (`clubs.domain`) |
 | Artikel | `/<slug>/artikel/<id>` |
 | Warenkorb / Kasse | `/<slug>/warenkorb`, `/<slug>/kasse` |
 | Bestellstatus (Kunde) | `/<slug>/bestellung/<bestellnr>?t=<token>` |

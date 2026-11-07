@@ -1,8 +1,8 @@
 'use strict';
-// Beispieldaten: Sporthaus-Stammdaten, Backend-Benutzer, VfB Hellerau-Klotzsche (25 Artikel, Seiten, Demo-Bestellungen)
+// Beispieldaten: Sporthaus-Stammdaten, Backend-Benutzer, VsB Mellernau (25 Artikel, Seiten, Demo-Bestellungen)
 // und ein fiktiver zweiter Verein (SG Musterdorf), um die Mehrmandantenfähigkeit zu zeigen.
 //
-//   npm run seed             – legt Beispieldaten an (bricht ab, wenn der VfB-Shop schon existiert)
+//   npm run seed             – legt Beispieldaten an (bricht ab, wenn der VsB-Shop schon existiert)
 //   npm run seed -- --reset  – leert vorher alle Tabellen (außer Sessions) und legt alles neu an
 const { db, get, all, run, tx, setSetting, DEFAULT_SETTINGS } = require('./db');
 const { hashPassword } = require('./lib/auth');
@@ -51,9 +51,9 @@ const PRINT = {
   embroidery: { key: 'stick', label: 'Namensstick', max_length: 16, price_cents: 600, placeholder: 'Lena Müller' },
 };
 
-// ---------------------------------------------------------------- VfB-Sortiment (25 Artikel)
+// ---------------------------------------------------------------- VsB-Sortiment (25 Artikel)
 // Preise angelehnt an die bisherige Vereinskollektion bei Sporthaus Ullmann.
-const VFB_PRODUCTS = [
+const VSB_PRODUCTS = [
   // ---- Turnen & RSG (Craft)
   {
     sku: '1912170', brand: 'Craft', name: 'RSG Rush Slim Singlet Damen', category: 'Turnen & RSG', illustration: 'tank',
@@ -97,7 +97,7 @@ const VFB_PRODUCTS = [
     price: 35.99, uvp: 54.99, sizes: S.adultKids, colors: [C.royal, C.navy, C.grey], featured: true,
     variants: [{ name: 'Herren', price_cents: null }, { name: 'Damen', price_cents: null }, { name: 'Kinder', price_cents: eur(32.99) }],
     description: 'Der Vereins-Hoodie für alle Abteilungen. Weiches Sweatmaterial mit angerauter Innenseite, Kängurutasche und gefütterter Kapuze.\n\n- Damen-Ausführung tailliert geschnitten\n- Material: 60 % Baumwolle, 40 % Polyester',
-    logo_print: 'Vereinslogo Brust links + "VfB Hellerau" Rücken', prints: [PRINT.name, PRINT.initials],
+    logo_print: 'Vereinslogo Brust links + "VsB Mellernau" Rücken', prints: [PRINT.name, PRINT.initials],
   },
   {
     sku: '1032320', brand: 'Erima', name: 'Liga Star Trainingsjacke', category: 'Jacken & Hoodies', illustration: 'jacket',
@@ -168,7 +168,7 @@ const VFB_PRODUCTS = [
     price: 24.99, uvp: 39.99, sizes: S.adultKids, colors: [C.royal, C.white, C.green], featured: true,
     variants: [{ name: 'Erwachsene', price_cents: null }, { name: 'Kinder', price_cents: eur(21.99) }],
     funding: 'subsidy', subsidy: 10,
-    description: 'Das offizielle Heimtrikot des VfB. Leichtes, atmungsaktives Mesh-Material mit V-Ausschnitt.\n\n**Der Verein gibt 10 € pro Trikot dazu.**',
+    description: 'Das offizielle Heimtrikot des VsB. Leichtes, atmungsaktives Mesh-Material mit V-Ausschnitt.\n\n**Der Verein gibt 10 € pro Trikot dazu.**',
     logo_print: 'Vereinslogo Brust + Sponsor', prints: [PRINT.name, PRINT.number],
   },
   {
@@ -215,10 +215,10 @@ const VFB_PRODUCTS = [
     description: 'Rucksack mit gepolstertem Laptopfach, Bodenfach für Schuhe und Seitentaschen.', logo_print: 'Vereinslogo Front', prints: [PRINT.bagName],
   },
   {
-    sku: 'VFB-HT-70', brand: 'Vereinsartikel', name: 'Duschtuch mit Vereinslogo', category: 'Accessoires', illustration: 'towel',
+    sku: 'VSB-HT-70', brand: 'Vereinsartikel', name: 'Duschtuch mit Vereinslogo', category: 'Accessoires', illustration: 'towel',
     price: 19.99, uvp: 29.95, sizes: [], colors: [C.vfb, C.white],
     variants: [{ name: '70 × 140 cm', price_cents: null }, { name: '50 × 100 cm', price_cents: eur(14.99) }],
-    description: 'Flauschiges Frottee-Duschtuch mit eingesticktem VfB-Logo. Optional mit deinem Namen bestickt.', logo_print: 'Vereinslogo gestickt', prints: [PRINT.embroidery],
+    description: 'Flauschiges Frottee-Duschtuch mit eingesticktem VsB-Logo. Optional mit deinem Namen bestickt.', logo_print: 'Vereinslogo gestickt', prints: [PRINT.embroidery],
   },
 ];
 
@@ -258,15 +258,9 @@ function storeLines(s) {
   return `${s.store_name}  \n${s.store_street}  \n${s.store_zip_city}`;
 }
 
-const VFB_INTRO = `Herzlich willkommen im Vereinsshop des **VfB Hellerau-Klotzsche e.V.**!
+const VSB_INTRO = `Bestelle die Artikel der Vereinskollektion direkt hier – nur für Mitglieder des **VsB Mellernau e.V.** Anprobe im Sporthaus Ullmann ist möglich, Details findest du im [FAQ](/vsb-mellernau/seite/faq).`;
 
-Die Artikel unserer Vereinskollektion kannst du hier direkt bestellen – oder telefonisch bzw. vor Ort im Sporthaus Ullmann. Wähle Farbe, Größe und Ausführung, ergänze auf Wunsch deinen Namen oder deine Rückennummer und löse die Bestellung verbindlich aus.
-
-- Du hast die Möglichkeit, die Textilien **vor dem Druck im Sporthaus anzuprobieren**.
-- **Wichtig:** Die Angebote gelten ausschließlich für Mitglieder des VfB Hellerau-Klotzsche e.V.
-- Die **Druckkosten für Vereinsname und Logo übernimmt der Verein.** Individuelle Sonderdrucke (Name, Nummer, Initialen) werden separat berechnet.`;
-
-const VFB_ORDER_INFO = `**Abholung & Bezahlung:** Deine Bestellung holst du im Sporthaus Ullmann, Hohenbusch-Markt 1, 01108 Dresden ab und bezahlst sie dort (bar oder mit Karte).
+const VSB_ORDER_INFO = `**Abholung & Bezahlung:** Deine Bestellung holst du im Sporthaus Ullmann, Hohenbusch-Markt 1, 01108 Dresden ab und bezahlst sie dort (bar oder mit Karte).
 
 **Bearbeitungszeit:** Wegen des Drucks bzw. der Beflockung beträgt die Lieferzeit ca. **2–3 Wochen**. Wir informieren dich, sobald deine Bestellung abholbereit ist.
 
@@ -331,7 +325,7 @@ Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Vera
   ];
 }
 
-const VFB_PAGES = [
+const VSB_PAGES = [
   {
     slug: 'abholung-bezahlung', title: 'Abholung & Bezahlung', show_in_nav: 1, sort_order: 1,
     content: `## So läuft deine Bestellung ab
@@ -392,7 +386,7 @@ Du bist unsicher bei der Größe? Komm vorbei – alle Artikel der Kollektion ka
   {
     slug: 'faq', title: 'FAQ', show_in_nav: 1, sort_order: 3,
     content: `### Wer darf im Vereinsshop bestellen?
-Die Angebote gelten ausschließlich für Mitglieder des VfB Hellerau-Klotzsche e.V. und deren Familien.
+Die Angebote gelten ausschließlich für Mitglieder des VsB Mellernau e.V. und deren Familien.
 
 ### Kann ich meine Bestellung noch ändern?
 Solange deine Bestellung noch nicht im Druck ist, schreib uns einfach über den Link in deiner Bestellbestätigung eine Nachricht.
@@ -421,7 +415,7 @@ Bestellen, abholen und bezahlen im Sporthaus Ullmann.`,
 
 // ---------------------------------------------------------------- Demo-Bestellungen
 // path: Statusfolge ab 'new'. msgs: Nachrichten [Absender, Text] in Reihenfolge, eingestreut nach dem Status mit Index `after`.
-const VFB_ORDERS = [
+const VSB_ORDERS = [
   {
     daysAgo: 21, customer: { first_name: 'Sandra', last_name: 'Köhler', email: 'sandra.koehler@example.org', phone: '0351 1234567', team: 'Damen RSG', member_number: '1042' },
     items: [['1912170', null, 'Club Cobolt', '38', 1, { vorname: 'SANDRA' }], ['1912180', null, 'Schwarz/Weiß', '38', 1]],
@@ -469,7 +463,7 @@ const VFB_ORDERS = [
   },
   {
     daysAgo: 1, customer: { first_name: 'Claudia', last_name: 'Wagner', email: 'c.wagner@example.org', team: 'Eltern / Förderverein' },
-    items: [['1072302', 'Damen', 'Grau meliert', 'M', 1], ['2122301', null, 'Navy/Weiß', 'S/M', 1], ['VFB-HT-70', '70 × 140 cm', 'Vereinsblau/Weiß', null, 1, { stick: 'Claudia' }]],
+    items: [['1072302', 'Damen', 'Grau meliert', 'M', 1], ['2122301', null, 'Navy/Weiß', 'S/M', 1], ['VSB-HT-70', '70 × 140 cm', 'Vereinsblau/Weiß', null, 1, { stick: 'Claudia' }]],
     path: [],
   },
   {
@@ -588,8 +582,8 @@ function resetAll() {
  */
 function seed({ reset = false, log = console.log } = {}) {
   if (reset) resetAll();
-  else if (get("SELECT id FROM clubs WHERE slug = 'vfb-hellerau'")) {
-    log('Der Shop "vfb-hellerau" existiert bereits – nichts geändert. Zum Neuanlegen: npm run seed -- --reset');
+  else if (get("SELECT id FROM clubs WHERE slug = 'vsb-mellernau'")) {
+    log('Der Shop "vsb-mellernau" existiert bereits – nichts geändert. Zum Neuanlegen: npm run seed -- --reset');
     return { skipped: true };
   }
 
@@ -613,14 +607,14 @@ function seed({ reset = false, log = console.log } = {}) {
     }
 
     const vfb = insertClub({
-      slug: 'vfb-hellerau', name: 'VfB Hellerau-Klotzsche e.V.', short_name: 'VfB Hellerau', order_prefix: 'VFB',
+      slug: 'vsb-mellernau', name: 'VsB Mellernau e.V.', short_name: 'VsB Mellernau', order_prefix: 'VSB',
       color_primary: '#1b2d9a', color_secondary: '#ffffff', color_accent: '#2f9a45',
-      logo_path: '/static/img/clubs/vfb-hellerau.svg', tagline: 'Dein Verein im Dresdner Norden',
-      intro_text: VFB_INTRO, order_info: VFB_ORDER_INFO,
+      logo_path: '/static/img/clubs/vsb-mellernau.svg', tagline: 'Dein Verein vor Ort',
+      intro_text: VSB_INTRO, order_info: VSB_ORDER_INFO,
       contact_name: 'Team Teamsport', contact_email: settings.store_email, contact_phone: settings.store_phone,
     });
-    insertProducts(vfb.id, VFB_PRODUCTS);
-    insertPages(vfb.id, VFB_PAGES);
+    insertProducts(vfb.id, VSB_PRODUCTS);
+    insertPages(vfb.id, VSB_PAGES);
 
     const sgm = insertClub({
       slug: 'sg-musterdorf', name: 'SG Musterdorf 1921 e.V.', short_name: 'SG Musterdorf', order_prefix: 'SGM',
@@ -636,7 +630,7 @@ function seed({ reset = false, log = console.log } = {}) {
     return { vfb, sgm };
   });
   // Bestellungen außerhalb der Transaktion (createOrder/changeStatus öffnen eigene Transaktionen)
-  insertOrders(clubs.vfb, VFB_ORDERS);
+  insertOrders(clubs.vfb, VSB_ORDERS);
   insertOrders(clubs.sgm, SGM_ORDERS);
 
   const result = {
@@ -649,7 +643,7 @@ function seed({ reset = false, log = console.log } = {}) {
   log(`
 Beispieldaten angelegt: ${result.clubs} Vereine, ${result.products} Artikel, ${result.orders} Bestellungen.
 
-  Shop VfB Hellerau:   http://localhost:${port}/vfb-hellerau
+  Shop VsB Mellernau:   http://localhost:${port}/vsb-mellernau
   Shop SG Musterdorf:  http://localhost:${port}/sg-musterdorf   (fiktiver Demo-Verein)
   Backend:             http://localhost:${port}/admin
 
@@ -665,4 +659,4 @@ if (require.main === module) {
   db.close();
 }
 
-module.exports = { seed, VFB_PRODUCTS, SGM_PRODUCTS };
+module.exports = { seed, VSB_PRODUCTS, SGM_PRODUCTS };

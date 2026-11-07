@@ -40,32 +40,32 @@ test('Bestellung vom Shop bis zur Annahme im Backend', async (t) => {
 
   // Shopseiten
   assert.equal((await shop('GET', '/')).status, 200);
-  const home = await shop('GET', '/vfb-hellerau');
+  const home = await shop('GET', '/vsb-mellernau');
   assert.equal(home.status, 200);
-  assert.match(home.text, /VfB Hellerau/);
-  assert.equal((await shop('GET', '/vfb-hellerau/seite/datenschutz')).status, 200);
+  assert.match(home.text, /VsB Mellernau/);
+  assert.equal((await shop('GET', '/vsb-mellernau/seite/datenschutz')).status, 200);
   assert.equal((await shop('GET', '/gibt-es-nicht')).status, 404);
 
   // Trainingsjacke mit Ausführung, Farbe, Größe und Namensdruck in den Warenkorb
   const product = get("SELECT * FROM products WHERE sku = '1032320'");
   assert.ok(product, 'Trainingsjacke 1032320 fehlt im Seed');
   const p = { ...product, variants: JSON.parse(product.variants), colors: JSON.parse(product.colors), sizes: JSON.parse(product.sizes), print_options: JSON.parse(product.print_options) };
-  assert.equal((await shop('GET', `/vfb-hellerau/artikel/${p.id}`)).status, 200);
+  assert.equal((await shop('GET', `/vsb-mellernau/artikel/${p.id}`)).status, 200);
   const line = { productId: p.id, quantity: '2' };
   if (p.variants.length) line.variant = p.variants[0].name;
   if (p.colors.length) line.color = p.colors[0].name;
   if (p.sizes.length) line.size = p.sizes[1] || p.sizes[0];
   for (const o of p.print_options) line[`prints[${o.key}]`] = o.key === 'number' ? '7' : 'TEST';
-  const add = await shop('POST', '/vfb-hellerau/warenkorb/add', line);
+  const add = await shop('POST', '/vsb-mellernau/warenkorb/add', line);
   assert.equal(add.status, 302);
-  const cart = await shop('GET', '/vfb-hellerau/warenkorb');
+  const cart = await shop('GET', '/vsb-mellernau/warenkorb');
   assert.match(cart.text, new RegExp(p.name.slice(0, 15)));
 
   // Kasse: erst ohne Pflichtfelder (Fehler), dann vollständig
-  const bad = await shop('POST', '/vfb-hellerau/kasse', { first_name: '' });
+  const bad = await shop('POST', '/vsb-mellernau/kasse', { first_name: '' });
   assert.notEqual(bad.status, 302);
   const ordersBefore = get('SELECT COUNT(*) AS n FROM orders').n;
-  const ok = await shop('POST', '/vfb-hellerau/kasse', {
+  const ok = await shop('POST', '/vsb-mellernau/kasse', {
     first_name: 'Erika', last_name: 'Testfrau', email: 'erika@example.org', phone: '0351 123', team: 'D-Jugend', privacy: '1',
   });
   assert.equal(ok.status, 302, ok.text.slice(0, 500));
@@ -76,9 +76,9 @@ test('Bestellung vom Shop bis zur Annahme im Backend', async (t) => {
   assert.ok(order.total_cents > 0);
 
   // Statusseite: nur mit richtigem Token
-  const statusUrl = `/vfb-hellerau/bestellung/${order.order_number}?t=${order.access_token}`;
+  const statusUrl = `/vsb-mellernau/bestellung/${order.order_number}?t=${order.access_token}`;
   assert.equal((await shop('GET', statusUrl)).status, 200);
-  assert.equal((await shop('GET', `/vfb-hellerau/bestellung/${order.order_number}?t=falsch`)).status, 404);
+  assert.equal((await shop('GET', `/vsb-mellernau/bestellung/${order.order_number}?t=falsch`)).status, 404);
 
   // Backend: Schutz, Login, Bestellung sehen
   assert.equal((await admin('GET', '/admin/orders')).status, 302);
@@ -98,7 +98,7 @@ test('Bestellung vom Shop bis zur Annahme im Backend', async (t) => {
   // Rückfrage stellen -> Kunde antwortet -> annehmen
   await admin('POST', `/admin/orders/${order.id}/status`, { to: 'question', message: 'Welche Größe genau?' });
   assert.equal(get('SELECT status FROM orders WHERE id = ?', order.id).status, 'question');
-  await shop('POST', `/vfb-hellerau/bestellung/${order.order_number}/nachricht`, { t: order.access_token, body: 'Größe M passt.' });
+  await shop('POST', `/vsb-mellernau/bestellung/${order.order_number}/nachricht`, { t: order.access_token, body: 'Größe M passt.' });
   assert.equal(get("SELECT COUNT(*) AS n FROM order_messages WHERE order_id = ? AND sender = 'customer'", order.id).n, 1);
   await admin('POST', `/admin/orders/${order.id}/status`, { to: 'accepted' });
   assert.equal(get('SELECT status FROM orders WHERE id = ?', order.id).status, 'accepted');

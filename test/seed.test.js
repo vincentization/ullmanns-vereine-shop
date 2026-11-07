@@ -14,10 +14,10 @@ const { ILLUSTRATIONS, renderIllustration } = require('../src/lib/illustrations'
 
 const quiet = () => {};
 
-test('Seed legt Vereine, 25 VfB-Artikel, Seiten, Benutzer und Bestellungen an', () => {
+test('Seed legt Vereine, 25 VsB-Artikel, Seiten, Benutzer und Bestellungen an', () => {
   const r = seed({ log: quiet });
   assert.equal(r.skipped, false);
-  const vfb = get("SELECT * FROM clubs WHERE slug = 'vfb-hellerau'");
+  const vfb = get("SELECT * FROM clubs WHERE slug = 'vsb-mellernau'");
   assert.ok(vfb);
   assert.equal(get('SELECT COUNT(*) AS n FROM products WHERE club_id = ?', vfb.id).n, 25);
   assert.ok(get('SELECT COUNT(*) AS n FROM products WHERE club_id = ? AND is_active = 0', vfb.id).n >= 1);

@@ -5,7 +5,7 @@ const { summarizeCart, parseJSON } = require('./pricing');
 const { randomToken } = require('./auth');
 const { ORDER_STATUSES } = require('./format');
 
-/** Nächste Bestellnummer, z.B. VFB-2026-0007 (laufend je Verein und Jahr) */
+/** Nächste Bestellnummer, z.B. VSB-2026-0007 (laufend je Verein und Jahr) */
 function nextOrderNumber(club) {
   const year = new Date().getFullYear();
   const prefix = `${club.order_prefix}-${year}-`;

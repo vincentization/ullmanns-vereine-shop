@@ -78,7 +78,7 @@ function markdown(text) {
   return marked.parse(String(text), { breaks: true });
 }
 
-/** Text -> URL-Slug: "VfB Hellerau-Klotzsche" -> "vfb-hellerau-klotzsche" */
+/** Text -> URL-Slug: "VsB Mellernau" -> "vsb-mellernau" */
 function slugify(text) {
   return String(text || '')
     .toLowerCase()

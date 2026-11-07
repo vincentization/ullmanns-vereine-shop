@@ -42,7 +42,7 @@
   pre && pre.addEventListener('input', function () {
     pre.setAttribute('data-touched', '1');
     pre.value = pre.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-    if (preExample) preExample.textContent = pre.value || 'VFB';
+    if (preExample) preExample.textContent = pre.value || 'VSB';
   });
 
   function updateNames() {
@@ -50,13 +50,13 @@
     if (slug && !slug.getAttribute('data-touched')) slug.value = slugify(basis);
     if (pre && !pre.getAttribute('data-touched')) {
       pre.value = prefix(basis);
-      if (preExample) preExample.textContent = pre.value || 'VFB';
+      if (preExample) preExample.textContent = pre.value || 'VSB';
     }
     if (preview) {
       preview.querySelector('[data-preview-name]').textContent = basis || 'Vereinsname';
       preview.querySelector('[data-preview-tagline]').textContent = (tagline && tagline.value.trim()) || 'Vereinskollektion';
       var logoSpan = preview.querySelector('[data-preview-logo] span');
-      if (logoSpan) logoSpan.textContent = (basis || 'VfB').slice(0, 3);
+      if (logoSpan) logoSpan.textContent = (basis || 'VsB').slice(0, 3);
     }
   }
   [name, short, tagline].forEach(function (el) { el && el.addEventListener('input', updateNames); });

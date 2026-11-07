@@ -5,7 +5,7 @@ Vereinsmitglieder bestellen dort selbstständig ihre Vereinskollektion (inkl. Na
 die Bestellungen im **Backend** an, klärt Rückfragen, koordiniert den Druck mit dem Dienstleister und übergibt die Ware im Laden.
 Bezahlt wird grundsätzlich bei Abholung im Geschäft.
 
-Beispiel-Shop: **VfB Hellerau-Klotzsche e.V.** mit 25 Artikeln, dazu der fiktive Demo-Verein *SG Musterdorf*.
+Beispiel-Shop: **VsB Mellernau e.V.** mit 25 Artikeln, dazu der fiktive Demo-Verein *SG Musterdorf*.
 
 ## Schnellstart
 
@@ -26,7 +26,7 @@ npm start
 | | URL |
 |---|---|
 | Übersicht aller Vereinsshops | http://localhost:3000/ |
-| Shop VfB Hellerau | http://localhost:3000/vfb-hellerau |
+| Shop VsB Mellernau | http://localhost:3000/vsb-mellernau |
 | Shop SG Musterdorf (Demo) | http://localhost:3000/sg-musterdorf |
 | Backend | http://localhost:3000/admin |
 
@@ -44,7 +44,7 @@ Weitere Befehle: `npm run dev` (Neustart bei Codeänderungen), `npm test` (autom
 
 ### Vereinsshop (für Mitglieder)
 
-- Eigene URL je Verein (`/<verein>`), optional eigene Domain (z. B. `shop.vfb-hellerau.de`)
+- Eigene URL je Verein (`/<verein>`), optional eigene Domain (z. B. `shop.vsb-mellernau.de`)
 - Vereinsbranding: Logo, Vereinsfarben, Slogan, Begrüßungstext
 - Übersicht der Vereinskollektion mit Kategorien, UVP und Vereinspreis
 - Artikelseite mit Auswahl von **Farbe, Ausführung** (z. B. Damen/Herren/Kinder mit eigenem Preis), **Größe** und **Menge**
@@ -84,7 +84,7 @@ Mitglied bestellt ──► Eingegangen ──► Angenommen ──► Im Druck 
 | Abgeholt | Abgeschlossen |
 | Abgelehnt / Storniert | Mit Begründung, für das Mitglied sichtbar |
 
-Die Bestellnummer setzt sich aus Vereinskürzel, Jahr und laufender Nummer zusammen (z. B. `VFB-2026-0007`).
+Die Bestellnummer setzt sich aus Vereinskürzel, Jahr und laufender Nummer zusammen (z. B. `VSB-2026-0007`).
 
 ## Finanzierungsmodelle (je Artikel)
 
@@ -107,7 +107,7 @@ Die Druckkosten für Vereinsname und Logo sind – wie bisher – im Vereinsprei
 4. Begrüßungstext und Hinweise zu Abholung/Bezahlung eintragen, ggf. eigene Seiten anlegen.
 5. Shop-Link an den Verein geben (`https://<ihre-domain>/<kürzel>`).
 
-> Das VfB-Wappen in den Beispieldaten ist ein **stilisierter Platzhalter** (`public/img/clubs/vfb-hellerau.svg`).
+> Das VsB-Wappen in den Beispieldaten ist ein **stilisierter Platzhalter** (`public/img/clubs/vsb-mellernau.svg`).
 > Bitte das Original-Logo des Vereins im Backend unter *Vereine & Shops* hochladen.
 
 ## Konfiguration

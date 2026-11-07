@@ -31,16 +31,16 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS clubs (
   id               INTEGER PRIMARY KEY,
   slug             TEXT NOT NULL UNIQUE,          -- URL: /<slug>
-  name             TEXT NOT NULL,                 -- "VfB Hellerau-Klotzsche e.V."
-  short_name       TEXT,                          -- "VfB Hellerau"
-  order_prefix     TEXT NOT NULL,                 -- Präfix der Bestellnummer, z.B. "VFB"
-  domain           TEXT UNIQUE,                   -- optional eigene Domain, z.B. shop.vfb-hellerau.de
+  name             TEXT NOT NULL,                 -- "VsB Mellernau e.V."
+  short_name       TEXT,                          -- "VsB Mellernau"
+  order_prefix     TEXT NOT NULL,                 -- Präfix der Bestellnummer, z.B. "VSB"
+  domain           TEXT UNIQUE,                   -- optional eigene Domain, z.B. shop.vsb-mellernau.de
   color_primary    TEXT NOT NULL DEFAULT '#1d3c9c',
   color_secondary  TEXT NOT NULL DEFAULT '#ffffff',
   color_accent     TEXT NOT NULL DEFAULT '#2e9e48',
   logo_path        TEXT,                          -- /uploads/... oder /static/...
   hero_image_path  TEXT,
-  tagline          TEXT,                          -- "Dein Verein im Dresdner Norden"
+  tagline          TEXT,                          -- "Dein Verein vor Ort"
   intro_text       TEXT,                          -- Markdown, Begrüßung auf der Startseite
   order_info       TEXT,                          -- Markdown, Hinweise zu Abholung/Zahlung im Checkout
   contact_name     TEXT,                          -- Ansprechpartner im Sporthaus
@@ -98,7 +98,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_pages_slug ON pages(IFNULL(club_id, 0), sl
 
 CREATE TABLE IF NOT EXISTS orders (
   id                 INTEGER PRIMARY KEY,
-  order_number       TEXT NOT NULL UNIQUE,     -- z.B. VFB-2026-0007
+  order_number       TEXT NOT NULL UNIQUE,     -- z.B. VSB-2026-0007
   club_id            INTEGER NOT NULL REFERENCES clubs(id),
   access_token       TEXT NOT NULL,            -- geheimer Link für die Bestellstatus-Seite des Kunden
   status             TEXT NOT NULL DEFAULT 'new', -- siehe lib/format.js ORDER_STATUSES
