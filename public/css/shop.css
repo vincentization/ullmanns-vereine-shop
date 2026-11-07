@@ -427,3 +427,4 @@ textarea { resize: vertical; min-height: 80px; }
 @media print {
   .topbar, .site-header, .site-footer, .message-form, .btn { display: none !important; }
 }
+.footer-bottom .admin-link { color: inherit; text-decoration: underline; }
