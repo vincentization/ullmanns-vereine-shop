@@ -10,10 +10,10 @@ const UPLOAD_DIR = path.join(DATA_DIR, 'uploads');
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 const DB_FILE = process.env.DB_FILE || path.join(DATA_DIR, 'shop.sqlite');
-const db = new DatabaseSync(DB_FILE);
-db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON; PRAGMA busy_timeout = 5000;');
+const JOURNAL_MODE = process.env.DB_JOURNAL_MODE || 'WAL';
+let db;
 
-db.exec(`
+const SCHEMA = `
 CREATE TABLE IF NOT EXISTS settings (
   key   TEXT PRIMARY KEY,
   value TEXT
@@ -171,7 +171,16 @@ CREATE TABLE IF NOT EXISTS sessions (
   sess    TEXT NOT NULL,
   expires INTEGER NOT NULL
 );
-`);
+`;
+
+/** Öffnet die Datenbank (erneut) und legt fehlende Tabellen an. Wird auch genutzt, um einen Snapshot zu laden. */
+function open() {
+  if (db) { try { db.close(); } catch { /* schon geschlossen */ } }
+  db = new DatabaseSync(DB_FILE);
+  db.exec(`PRAGMA journal_mode = ${JOURNAL_MODE}; PRAGMA foreign_keys = ON; PRAGMA busy_timeout = 5000;`);
+  db.exec(SCHEMA);
+}
+open();
 
 /** Führt fn in einer Transaktion aus. */
 function tx(fn) {
@@ -220,4 +229,4 @@ const DEFAULT_SETTINGS = {
   price_footnote: '*Alle Preisangaben gelten inklusive gesetzlicher MwSt. und bei Selbstabholung. Bei Preisen, die mit "UVP" gekennzeichnet sind, handelt es sich um die unverbindliche Preisempfehlung des Herstellers/Lieferanten.',
 };
 
-module.exports = { db, tx, get, all, run, getSetting, setSetting, getSettings, DATA_DIR, UPLOAD_DIR, DEFAULT_SETTINGS };
+module.exports = { get db() { return db; }, reopen: open, DB_FILE, tx, get, all, run, getSetting, setSetting, getSettings, DATA_DIR, UPLOAD_DIR, DEFAULT_SETTINGS };
